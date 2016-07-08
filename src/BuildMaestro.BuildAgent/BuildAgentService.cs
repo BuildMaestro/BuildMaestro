@@ -41,13 +41,14 @@ namespace BuildMaestro.BuildAgent
 
                     while (!token.IsCancellationRequested)
                     {
-                        
                         while (DateTime.UtcNow.Subtract(lastRun).TotalSeconds <= 1)
                         {
                             System.Threading.Tasks.Task.Delay(100).Wait();
                         }
 
-                       this.OnCpuValueChanged();
+                        this.OnCpuValueChanged();
+
+                        lastRun = DateTime.UtcNow;
                     }
                 }, token);
             }

@@ -1,0 +1,78 @@
+{
+  "_args": [
+    [
+      "css-animator@^1.2.4",
+      "D:\\Development\\Git\\BuildMaestro\\src\\BuildMaestro.Web"
+    ]
+  ],
+  "_from": "css-animator@>=1.2.4-0 <2.0.0-0",
+  "_id": "css-animator@1.2.4",
+  "_inCache": true,
+  "_location": "/css-animator",
+  "_nodeVersion": "6.2.1",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/css-animator-1.2.4.tgz_1466248055105_0.4614005403127521"
+  },
+  "_npmUser": {
+    "email": "hi@fabianweb.net",
+    "name": "fabiandev"
+  },
+  "_npmVersion": "3.9.3",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "css-animator",
+    "raw": "css-animator@^1.2.4",
+    "rawSpec": "^1.2.4",
+    "scope": null,
+    "spec": ">=1.2.4-0 <2.0.0-0",
+    "type": "range"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/css-animator/-/css-animator-1.2.4.tgz",
+  "_shasum": "0361c651329ffc174e22e7d77628c753b1f587b9",
+  "_shrinkwrap": null,
+  "_spec": "css-animator@^1.2.4",
+  "_where": "D:\\Development\\Git\\BuildMaestro\\src\\BuildMaestro.Web",
+  "author": {
+    "name": "Fabian Pirklbauer"
+  },
+  "bugs": {
+    "url": "https://github.com/fabiandev/css-animator/issues"
+  },
+  "dependencies": {},
+  "description": "Animate elements using CSS classes with support for Angular2.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "0361c651329ffc174e22e7d77628c753b1f587b9",
+    "tarball": "https://registry.npmjs.org/css-animator/-/css-animator-1.2.4.tgz"
+  },
+  "homepage": "https://github.com/fabiandev/css-animator#readme",
+  "installable": true,
+  "keywords": [
+    "angular2",
+    "animate",
+    "animate.css",
+    "animation",
+    "css",
+    "directive"
+  ],
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "fabiandev",
+      "email": "hi@fabianweb.net"
+    }
+  ],
+  "name": "css-animator",
+  "optionalDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabiandev/css-animator.git"
+  },
+  "scripts": {},
+  "version": "1.2.4"
+}

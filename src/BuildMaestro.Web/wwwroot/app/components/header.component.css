@@ -1,0 +1,18 @@
+﻿.bm-header {
+    background-color: darkblue;
+    height: 50px;
+}
+
+    .bm-header .title {
+        color: white;
+        display: inline-block;
+        font-size: 30px;
+        margin-left: 10px;
+        margin-top: 5px;
+        padding: 0;
+    }
+
+.fa-beer:before {
+    content: "\\f0fc";
+    color: #fff;
+}

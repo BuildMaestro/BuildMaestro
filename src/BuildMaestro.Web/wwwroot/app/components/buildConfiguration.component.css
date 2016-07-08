@@ -1,0 +1,19 @@
+﻿.content {
+    background-color: #e3e3e3;
+    color: #666;
+    padding: 1em;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.name {
+    display: block;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.git-commit {
+    display: block;
+    text-align: center;
+}

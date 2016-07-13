@@ -20,7 +20,8 @@
     "Microsoft.Extensions.Configuration.EnvironmentVariables": "1.0.0-rc1-final",
     "Microsoft.AspNet.SignalR.Server": "3.0.0-rc1-final",
     "Microsoft.AspNet.IISPlatformHandler": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Hosting": "1.0.0-rc1-final"
+    "Microsoft.AspNet.Hosting": "1.0.0-rc1-final",
+    "BuildMaestro.Shared": "1.0.0-*"
   },
   "frameworks": {
     "dnx451": {},

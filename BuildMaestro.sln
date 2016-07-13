@@ -20,6 +20,8 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.AspNet.SignalR.Me
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.AspNet.SignalR.Sources", "src\Microsoft.AspNet.SignalR.Sources\Microsoft.AspNet.SignalR.Sources.xproj", "{C41C7A05-ADC3-4771-8F8D-18B86CE7FACC}"
 EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "BuildMaestro.Shared", "src\BuildMaestro.Shared\BuildMaestro.Shared.xproj", "{AA138E36-FFAB-44AD-9291-2153F16AC3D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +86,18 @@ Global
 		{C41C7A05-ADC3-4771-8F8D-18B86CE7FACC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{C41C7A05-ADC3-4771-8F8D-18B86CE7FACC}.Release|x86.ActiveCfg = Release|Any CPU
 		{C41C7A05-ADC3-4771-8F8D-18B86CE7FACC}.Release|x86.Build.0 = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Debug|x86.Build.0 = Debug|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|x86.ActiveCfg = Release|Any CPU
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -94,5 +108,6 @@ Global
 		{1E7F548C-CB60-46A1-B431-D67825A32698} = {7E97A022-A26F-4E1D-B91C-04F1442EF289}
 		{1A8EEF26-BA42-496D-9CAE-722581F9777C} = {7E97A022-A26F-4E1D-B91C-04F1442EF289}
 		{C41C7A05-ADC3-4771-8F8D-18B86CE7FACC} = {7E97A022-A26F-4E1D-B91C-04F1442EF289}
+		{AA138E36-FFAB-44AD-9291-2153F16AC3D8} = {7E97A022-A26F-4E1D-B91C-04F1442EF289}
 	EndGlobalSection
 EndGlobal

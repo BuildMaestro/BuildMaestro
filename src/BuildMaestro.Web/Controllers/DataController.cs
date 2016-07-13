@@ -1,5 +1,5 @@
-﻿using BuildMaestro.Web.Hubs;
-using BuildMaestro.Web.Models;
+﻿using BuildMaestro.Shared.Models;
+using BuildMaestro.Web.Hubs;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
@@ -24,24 +24,44 @@ namespace BuildMaestro.Web.Controllers
         [HttpGet]
         public IActionResult BuildConfigurations()
         {
-            var jsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-            var buildConfigurationsAsString = readJsonData("build-configurations.json");
-            var model = JsonConvert.DeserializeObject<List<BuildConfigurationModel>>(buildConfigurationsAsString, jsonSettings);
+            var dataService = new Services.DataService();
 
-
-            return Json(model);
+            return Json(dataService.GetBuildConfigurations());
         }
 
         [HttpPost]
-        public IActionResult Test(string value)
+        public IActionResult StartBuildAgent()
         {
-            var result = true;
+            var buildAgent = Core.BuildAgent.Instance;
+            var dataService = new Services.DataService();
 
-            BuildAgentHub.Clients.All.newCpuValue(33);
+            if (buildAgent.Service.State != BuildAgent.BuildAgentServiceState.Started)
+            {
+                buildAgent.Service.ApplicationConfiguration = dataService.GetApplicationConfiguration();
+                buildAgent.Service.BuildConfigurations = dataService.GetBuildConfigurations();
+                buildAgent.Service.Start();
 
-            return Json(result);
+                return Json(true);
+            }
+
+            return Json(false);
         }
 
+        [HttpPost]
+        public IActionResult StopBuildAgent()
+        {
+            var buildAgent = Core.BuildAgent.Instance;
+            var dataService = new Services.DataService();
+
+            if (buildAgent.Service.State != BuildAgent.BuildAgentServiceState.Stopped)
+            {
+                buildAgent.Service.Stop();
+
+                return Json(true);
+            }
+
+            return Json(false);
+        }
 
         private string readJsonData(string filename)
         {

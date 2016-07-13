@@ -3,6 +3,7 @@ using BuildMaestro.BuildAgent;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using BuildMaestro.Web.Hubs;
+using BuildMaestro.BuildAgent.Events;
 
 namespace BuildMaestro.Web.Core
 {
@@ -16,7 +17,8 @@ namespace BuildMaestro.Web.Core
         private BuildAgent()
         {
             Service = new BuildAgentService();
-            Service.CpuValuChanged += this.OnEvent;
+
+            Service.StatusEvent += this.OnEvent;
         }
 
         public static BuildAgent Instance
@@ -38,11 +40,17 @@ namespace BuildMaestro.Web.Core
             }
         }
 
-        private void OnEvent(object sender, EventArgs e)
+        public void Initialize()
         {
-            BuildAgentEventArgs eventsArgs = e as BuildAgentEventArgs;
 
-            Startup.BuildAgentHub.Clients.All.newCpuValue(eventsArgs.Value);
+        }
+
+        private void OnEvent(object sender, BuildAgentStatusEventArgs  e)
+        {
+            if (e.BuildConfigurationId != 0)
+            {
+                Startup.BuildAgentHub.Clients.All.bcStatusChange(e.BuildConfigurationId, e.EventCode);
+            }
         }
     }
 }

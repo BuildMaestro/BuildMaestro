@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BuildMaestro.Web.Models
+namespace BuildMaestro.Shared.BuildAgent
 {
     public class BuildAgentEventModel
     {

@@ -1,7 +1,5 @@
 ﻿import { BuildConfigurationModel } from '../models/buildConfiguration.model';
 import { Component, Input, DoCheck, KeyValueDiffers } from '@angular/core';
-import { DataHandlerIdentifier} from '../services/data.handlers.model';
-import { DataService } from '../services/data.service';
 
 import { animate, keyframes } from '@angular/core';
 import { style, state } from '@angular/core';
@@ -20,7 +18,7 @@ import { trigger } from '@angular/core';
         ])
     ],
     moduleId: module.id,
-    providers: [DataService],
+    providers: [],
     selector: 'build-configuration',
     styleUrls: [ 'buildConfiguration.component.css' ],
     templateUrl: 'buildConfiguration.component.html'
@@ -30,7 +28,7 @@ export class BuildConfigurationComponent implements DoCheck {
     differ: any;
     wapper: boolean = false;
 
-    constructor(private dataService: DataService, private differs: KeyValueDiffers) {
+    constructor(private differs: KeyValueDiffers) {
         this.differ = differs.find({}).create(null);
     }
 

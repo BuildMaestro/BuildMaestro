@@ -1,9 +1,9 @@
 ﻿<div class="buttons">
-    <input type="button" value="Simulate Build Agent event" (click)="test1()"/>
-    <input type="button" value="Send test event" (click)="test2()" />
+    <input type="button" value="Start build agent" (click)="start()" />
+    <input type="button" value="Stop build agent" (click)="stop()" />
 </div>
 <ul>
     <li *ngFor="let buildConfiguration of buildConfigurations"> 
         <build-configuration [configuration]="buildConfiguration"></build-configuration>
     </li>
-</ul>
+</ul>s

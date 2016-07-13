@@ -6,16 +6,18 @@ export class DataHandlersModel {
         this.addApplicationHandlers();
     }
 
-    public addApplicationHandlers() {
+    private addApplicationHandlers() {
         this.handlers.push({ identifier: DataHandlerIdentifier.GetBuildConfigurations, url: "/Data/BuildConfigurations" });
-        this.handlers.push({ identifier: DataHandlerIdentifier.Test, url: "/Data/Test" });
+        this.handlers.push({ identifier: DataHandlerIdentifier.StartBuildAgent, url: "/Data/StartBuildAgent" });
+        this.handlers.push({ identifier: DataHandlerIdentifier.StartBuildAgent, url: "/Data/StopBuildAgent" });
     }
 }
 
 /* DataHandler identifiers */
 export enum DataHandlerIdentifier {
     GetBuildConfigurations,
-    Test
+    StartBuildAgent,
+    StopBuildAgent
 }
 
 /* DataHandler */

@@ -19,7 +19,7 @@
     ]
   },
   {
-    "id": 1,
+    "id": 2,
     "autoDeploy": true,
     "buildType": "msbuild",
     "deployTag": "#bm-test2",
@@ -38,7 +38,7 @@
     ]
   },
   {
-    "id": 1,
+    "id": 3,
     "autoDeploy": false,
     "buildType": "msbuild",
     "deployTag": "",

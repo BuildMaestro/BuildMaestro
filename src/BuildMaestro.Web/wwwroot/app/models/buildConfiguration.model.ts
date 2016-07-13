@@ -9,6 +9,7 @@
     public lastDeployDate;
     public name: string;
     public purpose: string;
+    public statusText: string;
     public target: string;
     public targetFolders: string[];
     public targetUrls: string[];

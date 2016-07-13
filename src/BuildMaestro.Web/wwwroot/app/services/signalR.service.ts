@@ -10,13 +10,13 @@ export class SignalRService {
     private proxyName: string = 'buildagent';
     private connection;
 
-    public newCpuValue: EventEmitter<Number>;
+    public bcEvent: EventEmitter<BcEvent>;
     public connectionEstablished: EventEmitter<Boolean>;
     public connectionExists: Boolean;
 
     constructor() {
         this.connectionEstablished = new EventEmitter<Boolean>();
-        this.newCpuValue = new EventEmitter<Number>();
+        this.bcEvent = new EventEmitter<BcEvent>();
         this.connectionExists = false;
 
         this.connection = $.hubConnection(CONFIGURATION.baseUrls.server + 'signalr/');
@@ -39,8 +39,17 @@ export class SignalRService {
     }
 
     private registerOnServerEvents(): void {
-        this.proxy.on('newCpuValue', (data: number) => {
-            this.newCpuValue.emit(data);
+        this.proxy.on('bcStatusChange', (buildConfigurationId: number, eventCode: number) => {
+            var eventData = new BcEvent();
+            eventData.buildConfigurationId = buildConfigurationId;
+            eventData.eventCode = eventCode;
+            this.bcEvent.emit(eventData);
         });
     }
 }
+
+export class BcEvent {
+    buildConfigurationId: number;
+    eventCode: number;
+}
+

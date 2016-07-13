@@ -13,7 +13,6 @@ import { HeaderComponent } from './header.component';
     templateUrl: 'app.component.html'
 })
 export class AppComponent {
-
     constructor() {
     }
 }

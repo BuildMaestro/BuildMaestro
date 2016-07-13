@@ -2,8 +2,8 @@
 import { BuildConfigurationModel } from '../models/buildConfiguration.model';
 import { Component, Inject, NgZone, OnInit } from '@angular/core';
 import { DataHandlerIdentifier} from '../services/data-handlers.model';
-import { GitEventCodeResourcesModel } from '../services/git-event-code-resources.model';
 import { DataService } from '../services/data.service';
+import { GitEventCodeResourcesModel } from '../services/git-event-code-resources.model';
 import { SignalRService, BcEvent } from '../services/signalR.Service';
 
 @Component({

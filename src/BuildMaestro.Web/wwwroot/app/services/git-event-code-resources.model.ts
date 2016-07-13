@@ -1,5 +1,4 @@
-﻿/* Model for storing data handlers */
-export class GitEventCodeResourcesModel {
+﻿export class GitEventCodeResourcesModel {
     public gitEventCodeResources: Array<GitEventCodeResourceModel> = [];
 
     constructor() {
@@ -32,7 +31,6 @@ export class GitEventCodeResourcesModel {
     }
 }
 
-/* DataHandler identifiers,  */
 export enum GitEventCode {
     Unknown,
     Error,
@@ -48,7 +46,6 @@ export enum GitEventCode {
     GitPullFailure,
 }
 
-/* DataHandler */
 export class GitEventCodeResourceModel implements IGitEventCodeResourceModel {
     public eventCode: GitEventCode;
     public description: string;

@@ -11,6 +11,8 @@ using Microsoft.AspNet.Cors.Infrastructure;
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.SignalR;
 using BuildMaestro.Web.Hubs;
+using Microsoft.Data.Entity;
+using BuildMaestro.Web.Core;
 
 namespace BuildMaestro.Web
 {
@@ -35,14 +37,14 @@ namespace BuildMaestro.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
         {
-            // Add framework services.
+            services.AddEntityFramework().AddSqlServer().AddDbContext<Data.BuildMaestroContext>();
+
             services.AddMvc()
                     .AddJsonOptions(options =>
                     {
                         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     });
 
-            //Add Cors support to the service
             services.AddCors();
 
             var policy = new CorsPolicy();
@@ -75,6 +77,8 @@ namespace BuildMaestro.Web
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            Database.Initialize(app.ApplicationServices);
 
             BuildAgentHub = app.ApplicationServices.GetRequiredService<IHubContext<BuildAgentHub>>();
 

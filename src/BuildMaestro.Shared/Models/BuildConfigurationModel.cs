@@ -14,7 +14,8 @@ namespace BuildMaestro.Shared.Models
         public string DeployTag { get; set; }
         public string GitRepository { get; set; }
         public string GitBranch { get; set; }
-        public string GitCommit { get; set; }
+        public string GitCommitHash { get; set; }
+        public string GitCommitDate { get; set; }
         public DateTime? LastDeployDate { get; set; }
         public string Name { get; set; }
         public string Purpose { get; set; }

@@ -87,6 +87,7 @@ namespace BuildMaestro.BuildAgent.Services
                     catch (Exception ex)
                     {
                         this.BuildAgent.OnGitStatusEvent(buildConfiguration.Id, Events.GitServiceEventCode.GitPullFailure);
+                        
                     }
                 }
             }

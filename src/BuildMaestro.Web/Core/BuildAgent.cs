@@ -4,6 +4,8 @@ using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using BuildMaestro.Web.Hubs;
 using BuildMaestro.BuildAgent.Events;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace BuildMaestro.Web.Core
 {
@@ -18,7 +20,7 @@ namespace BuildMaestro.Web.Core
         {
             Service = new BuildAgentService();
 
-            Service.StatusEvent += this.OnEvent;
+            Service.StatusChangeEvent += this.OnEvent;
         }
 
         public static BuildAgent Instance
@@ -45,11 +47,13 @@ namespace BuildMaestro.Web.Core
 
         }
 
-        private void OnEvent(object sender, BuildAgentStatusEventArgs  e)
+        private void OnEvent(object sender, BuildAgentStatusChangeEventArgs e)
         {
             if (e.BuildConfigurationId != 0)
             {
-                Startup.BuildAgentHub.Clients.All.bcStatusChange(e.BuildConfigurationId, e.EventCode);
+                var data = JsonConvert.SerializeObject(e.Data, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+
+                Startup.BuildAgentHub.Clients.All.statusChange(e.BuildConfigurationId, e.EventCode, data);
             }
         }
     }

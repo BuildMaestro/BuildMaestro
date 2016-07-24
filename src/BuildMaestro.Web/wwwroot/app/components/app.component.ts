@@ -1,5 +1,5 @@
-﻿ import { BuildConfigurationsComponent } from './buildConfigurations.component';
-import { BuildConfigurationModel } from '../models/buildConfiguration.model';
+﻿import { BuildConfigurationsComponent } from './buildConfigurations.component';
+import { BuildConfigurationModel } from '../models/build-configuration.model';
 import { Component, Inject, OnInit, NgZone } from '@angular/core';
 import { CORE_DIRECTIVES } from '@angular/common';
 import { HeaderComponent } from './header.component';

@@ -5,11 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
+using BuildMaestro.Data.Models;
 
 namespace BuildMaestro.Data
 {
     public class BuildMaestroContext : DbContext
     {
+        public DbSet<Models.ApplicationSetting> AplicationSettings { get; set; }
         public DbSet<Models.BuildConfiguration> BuildConfigurations { get; set; }
 
         public string ConnectionString { get; set; }
@@ -46,6 +48,12 @@ namespace BuildMaestro.Data
             {
                 modelBuilder.Entity(entity.Name).ToTable(entity.Name + "s");
             }
+
+            //one-to-many 
+            modelBuilder.Entity<GitCommit>()
+                        .HasOne<BuildConfiguration>(s => s.BuildConfiguration)
+                        .WithMany(s => s.GitCommits)
+                        .HasForeignKey(s => s.BuildConfigurationId);
         }
     }
 }

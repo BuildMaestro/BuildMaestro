@@ -1,29 +1,29 @@
 ﻿import { BuildConfigurationComponent } from './buildConfiguration.component';
-import { BuildConfigurationModel } from '../models/buildConfiguration.model';
+import { BuildConfigurationModel } from '../models/build-configuration.model';
 import { Component, Inject, NgZone, OnInit } from '@angular/core';
 import { DataHandlerIdentifier} from '../services/data-handlers.model';
 import { DataService } from '../services/data.service';
-import { GitEventCodeResourcesModel } from '../services/git-event-code-resources.model';
-import { SignalRService, BcEvent } from '../services/signalR.Service';
+import { EventCodeResourcesModel, EventCode } from '../services/event-code-resources.model';
+import { SignalRService, StatusChangeEvent } from '../services/signalR.Service';
 
 @Component({
     directives: [BuildConfigurationComponent],
     moduleId: module.id,
-    providers: [DataService, GitEventCodeResourcesModel, SignalRService],
+    providers: [DataService, EventCodeResourcesModel, SignalRService],
     selector: 'build-configurations',
     styleUrls: [ 'buildConfigurations.component.css' ],
     templateUrl: 'buildConfigurations.component.html'
 })
 export class BuildConfigurationsComponent implements OnInit {
     buildConfigurations: BuildConfigurationModel[];
-    gitEventCodeResources: GitEventCodeResourcesModel;
+    gitEventCodeResources: EventCodeResourcesModel;
 
     constructor(private dataService: DataService,
                 private signalRService: SignalRService,
                 @Inject(NgZone) private zone: NgZone) {
 
         this.buildConfigurations = [];
-        this.gitEventCodeResources = new GitEventCodeResourcesModel();
+        this.gitEventCodeResources = new EventCodeResourcesModel();
         this.getData();
     }
 
@@ -59,19 +59,23 @@ export class BuildConfigurationsComponent implements OnInit {
     }
 
     subscribeToEvents(): void {
-        this.signalRService.bcEvent.subscribe((data: BcEvent) => {
+        this.signalRService.statusChanged.subscribe((event: StatusChangeEvent) => {
             this.zone.run(() => {
-                if (data.buildConfigurationId != 0) {
-                    this.dododo(data.buildConfigurationId, data.eventCode);
+                if (event.buildConfigurationId != 0) {
+                    this.handleStatusChange(event.buildConfigurationId, event.eventCode, event.data);
                 }
             });
         });
     }
 
-    dododo(buildconfigurationId: number, eventCode: number): void {
-        for (var i = 0, length = this.buildConfigurations.length; i < length; i++) {
-            if (this.buildConfigurations[i].id == buildconfigurationId) {
-                this.buildConfigurations[i].statusText = this.gitEventCodeResources.getDescription(eventCode);
+    handleStatusChange(buildconfigurationId: number, eventCode: number, data: any): void {
+        var buildConfiguration = this.buildConfigurations.find((config) => config.id === buildconfigurationId);
+
+        if (buildConfiguration) {
+            buildConfiguration.statusText = this.gitEventCodeResources.getDescription(eventCode);
+
+            if (eventCode === EventCode.GitUpdatingLastCommitChanged) {
+                buildConfiguration.latestGitCommit = data;
             }
         }
     }

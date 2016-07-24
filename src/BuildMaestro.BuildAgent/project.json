@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
 
   "buildOptions": {
@@ -11,6 +11,7 @@
   },
 
   "dependencies": {
+    "BuildMaestro.Service": "1.0.0-*",
     "BuildMaestro.Shared": "1.0.0-*"
   },
 
@@ -25,7 +26,7 @@
         "System.Diagnostics.Process": "4.1.0-beta-23409",
         "System.Linq": "4.0.0.0",
         "System.Reflection": "4.0.10.0",
-        "System.Runtime": "4.0.20.0",
+        "System.Runtime": "4.0.21-beta-23516",
         "System.Runtime.InteropServices": "4.0.10.0",
         "System.Threading": "4.0.0.0",
         "System.Threading.Tasks": "4.0.0.0"

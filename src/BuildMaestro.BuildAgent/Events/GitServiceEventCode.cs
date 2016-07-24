@@ -20,5 +20,8 @@ namespace BuildMaestro.BuildAgent.Events
         GitPull,
         GitPullSuccess,
         GitPullFailure,
+        GitUpdatingLastCommit,
+        GitUpdatingLastCommitNoChange,
+        GitUpdatingLastCommitChanged
     }
 }

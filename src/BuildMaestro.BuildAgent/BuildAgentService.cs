@@ -1,5 +1,6 @@
 ﻿using BuildMaestro.BuildAgent.Events;
 using BuildMaestro.BuildAgent.Services;
+using BuildMaestro.Service;
 using BuildMaestro.Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,9 @@ namespace BuildMaestro.BuildAgent
         const int WORKER_LOOP_INTERVAL = 5; // seconds
         const int WORKER_WAIT_DELAY = 100; // miliseconds
 
+        public delegate void StatusChangeEventHandler(object sender, BuildAgentStatusChangeEventArgs e);
+        public event StatusChangeEventHandler StatusChangeEvent;
+
         public BuildAgentServiceState State { get; private set; }
 
         private Task Task { get; set; }
@@ -21,14 +25,6 @@ namespace BuildMaestro.BuildAgent
         private CancellationTokenSource TokenSource { get; set; }
 
         readonly Random _random = new Random();
-
-        public delegate void StatusEventHandler(object sender, BuildAgentStatusEventArgs e);
-        public event StatusEventHandler StatusEvent;
-
-        public ApplicationConfigurationModel ApplicationConfiguration { get; set; }
-
-        public List<BuildConfigurationModel> BuildConfigurations { get; set; }
-
 
         public BuildAgentService()
         {
@@ -55,7 +51,7 @@ namespace BuildMaestro.BuildAgent
             this.Task = null;
             this.State = BuildAgentServiceState.Stopped;
         }
-        
+
         private void Worker(CancellationToken token)
         {
             var lastRun = DateTime.UtcNow;
@@ -76,27 +72,34 @@ namespace BuildMaestro.BuildAgent
 
         private void WorkerUpdateWorkspaces()
         {
-            if (this.ApplicationConfiguration != null && this.BuildConfigurations != null)
+            var buildConfigurationService = new BuildConfigurationService();
+            var buildConfigurations = buildConfigurationService.GetBuildConfigurations();
+
+            using (var gitService = new GitService(this))
             {
-                using (var gitService = new GitService(this))
+                foreach (var buildConfiguration in buildConfigurations)
                 {
-                    foreach (var buildConfiguration in this.BuildConfigurations)
-                    {
-                        gitService.ÚpdateWorkspace(buildConfiguration);
-                    }
+                    gitService.ÚpdateWorkspace(buildConfiguration);
                 }
             }
         }
 
-        public void OnGitStatusEvent(int buildConfigurationId, GitServiceEventCode code)
+        public void OnStatusChangeEvent(int buildConfigurationId, GitServiceEventCode code)
         {
-            if (this.StatusEvent != null)
+            this.OnStatusChangeEvent(buildConfigurationId, code, null);
+        }
+
+        public void OnStatusChangeEvent(int buildConfigurationId, GitServiceEventCode code, dynamic data)
+        {
+            if (this.StatusChangeEvent != null)
             {
-                this.StatusEvent(this, new BuildAgentStatusEventArgs()
+                this.StatusChangeEvent(this, new BuildAgentStatusChangeEventArgs()
                 {
-                    Type = BuildAgentStatusEventType.GitService,
                     BuildConfigurationId = buildConfigurationId,
-                    EventCode = (int)code
+                    Data = data,
+                    DateTime = DateTime.UtcNow,
+                    EventCode = (int)code,
+                    Type = BuildAgentStatusChangeEventType.GitService
                 });
             }
         }

@@ -4,11 +4,6 @@
   "buildOptions": {
     "emitEntryPoint": true
   },
-
-  "commands": {
-    "ef": "EntityFramework.Commands"
-  },
-
   "runtimeOptions": {
     "configProperties": {
       "System.GC.Server": true
@@ -16,23 +11,21 @@
   },
 
   "dependencies": {
+    "BuildMaestro.Data": "1.0.0-*",
+    "BuildMaestro.Shared": "1.0.0-*",
     "EntityFramework.Commands": "7.0.0-rc1-final",
     "EntityFramework.Core": "7.0.0-rc1-final",
     "EntityFramework.MicrosoftSqlServer": "7.0.0-rc1-final",
-    "EntityFramework.Relational": "7.0.0-rc1-final",
-    "Microsoft.Extensions.Configuration": "1.0.0-rc1-final",
-    "Microsoft.Extensions.Configuration.Json": "1.0.0-rc1-final"
+    "EntityFramework.Relational": "7.0.0-rc1-final"
   },
 
   "frameworks": {
     "dnx451": {},
     "dnxcore50": {
       "dependencies": {
-        "System.IO.FileSystem": "4.0.0",
         "System.Collections": "4.0.0.0",
         "System.Collections.Concurrent": "4.0.0.0",
-        "System.ComponentModel": "4.0.1.0",
-        "System.Diagnostics.Process": "4.1.0-beta-23409",
+        "System.ComponentModel": "4.0.1-beta-23516",
         "System.Linq": "4.0.0.0",
         "System.Reflection": "4.0.10.0",
         "System.Runtime": "4.0.21-beta-23516",

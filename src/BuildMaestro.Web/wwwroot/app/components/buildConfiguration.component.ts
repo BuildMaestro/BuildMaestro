@@ -1,4 +1,4 @@
-﻿import { BuildConfigurationModel } from '../models/buildConfiguration.model';
+﻿import { BuildConfigurationModel } from '../models/build-configuration.model';
 import { Component, Input, DoCheck, KeyValueDiffers } from '@angular/core';
 
 import { animate, keyframes } from '@angular/core';

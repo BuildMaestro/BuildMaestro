@@ -8,9 +8,10 @@ using BuildMaestro.Data;
 namespace BuildMaestro.Data.Migrations
 {
     [DbContext(typeof(BuildMaestroContext))]
-    partial class BuildMaestroContextModelSnapshot : ModelSnapshot
+    [Migration("20160723105923_Initial create")]
+    partial class Initialcreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.0-rc1-16348")

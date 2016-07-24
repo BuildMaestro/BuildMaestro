@@ -1,4 +1,9 @@
 ﻿<div class="content" @wapper="wapper">
     <span class="name">{{configuration.name}}</span>
-    <span class="git-status">Status: {{configuration.statusText}}</span>
+    <span class="git-commit-hash">
+        Latest commit: {{configuration.latestGitCommit ? configuration.latestGitCommit.hash : 'Unknown'}}
+    </span>
+    <span class="git-status">
+        Status: {{configuration.statusText ? configuration.statusText : 'Pending update...'}}
+    </span>
 </div>

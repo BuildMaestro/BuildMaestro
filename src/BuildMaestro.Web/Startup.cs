@@ -13,6 +13,8 @@ using Microsoft.AspNet.SignalR;
 using BuildMaestro.Web.Hubs;
 using Microsoft.Data.Entity;
 using BuildMaestro.Web.Core;
+using BuildMaestro.Service;
+using BuildMaestro.Data.Models;
 
 namespace BuildMaestro.Web
 {
@@ -27,9 +29,14 @@ namespace BuildMaestro.Web
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
 
-            // Start BuildAgent
+            var dbService = new DatabaseService();
+            dbService.Initialize();
+
             var buildAgent = Core.BuildAgent.Instance;
-            buildAgent.Service.Start();
+            if (buildAgent.Service.State != BuildAgent.BuildAgentServiceState.Started)
+            {
+                buildAgent.Service.Start();
+            }
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -77,8 +84,6 @@ namespace BuildMaestro.Web
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-
-            Database.Initialize(app.ApplicationServices);
 
             BuildAgentHub = app.ApplicationServices.GetRequiredService<IHubContext<BuildAgentHub>>();
 

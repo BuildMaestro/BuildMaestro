@@ -1,4 +1,7 @@
-﻿using BuildMaestro.Shared.Models;
+﻿using BuildMaestro.Data;
+using BuildMaestro.Data.Models;
+using BuildMaestro.Service;
+using BuildMaestro.Shared.Models;
 using BuildMaestro.Web.Hubs;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.SignalR;
@@ -14,31 +17,30 @@ namespace BuildMaestro.Web.Controllers
     public class DataController : Controller
     {
         private readonly IHubContext BuildAgentHub;
+        private BuildMaestroContext Context;
 
-        public DataController(IConnectionManager connectionManager)
+        public DataController(IConnectionManager connectionManager, BuildMaestroContext context)
         {
             BuildAgentHub = connectionManager.GetHubContext<BuildAgentHub>();
+            Context = context;
         }
 
         // GET: /<controller>/
         [HttpGet]
         public IActionResult BuildConfigurations()
         {
-            var dataService = new Services.DataService();
+            var buildConfigurationsService = new Service.BuildConfigurationService();
 
-            return Json(dataService.GetBuildConfigurations());
+            return Json(buildConfigurationsService.GetBuildConfigurations());
         }
 
         [HttpPost]
         public IActionResult StartBuildAgent()
         {
             var buildAgent = Core.BuildAgent.Instance;
-            var dataService = new Services.DataService();
 
             if (buildAgent.Service.State != BuildAgent.BuildAgentServiceState.Started)
             {
-                buildAgent.Service.ApplicationConfiguration = dataService.GetApplicationConfiguration();
-                buildAgent.Service.BuildConfigurations = dataService.GetBuildConfigurations();
                 buildAgent.Service.Start();
 
                 return Json(true);
@@ -51,7 +53,6 @@ namespace BuildMaestro.Web.Controllers
         public IActionResult StopBuildAgent()
         {
             var buildAgent = Core.BuildAgent.Instance;
-            var dataService = new Services.DataService();
 
             if (buildAgent.Service.State != BuildAgent.BuildAgentServiceState.Stopped)
             {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BuildMaestro.BuildAgent.Events
 {
-    public enum BuildAgentStatusEventType
+    public enum BuildAgentStatusChangeEventType
     {
         Unkown = 0,
         BuildAgent = 1,

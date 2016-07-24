@@ -10,14 +10,19 @@
         this.eventCodeResources.push({ eventCode: EventCode.Error, description: "Error occured" });
         this.eventCodeResources.push({ eventCode: EventCode.GitNotInstalled, description: "Git not installed" });
         this.eventCodeResources.push({ eventCode: EventCode.CreatingWorkspace, description: "Start creating workspace" });
+        this.eventCodeResources.push({ eventCode: EventCode.CreatingWorkspaceAlreadyExists, description: "Workspace ready" });
         this.eventCodeResources.push({ eventCode: EventCode.CreatingWorkspaceSuccess, description: "Create workspace successfully finished" });
         this.eventCodeResources.push({ eventCode: EventCode.CreatingWorkspaceFailure, description: "Create workspace error occured" });
         this.eventCodeResources.push({ eventCode: EventCode.GitCloning, description: "Starting git clone command" });
         this.eventCodeResources.push({ eventCode: EventCode.GitCloningSuccess, description: "Git clone successfully finished" });
         this.eventCodeResources.push({ eventCode: EventCode.GitCloningFailure, description: "Git clone error occured" });
-        this.eventCodeResources.push({ eventCode: EventCode.GitPull, description: "Starting git pull command" });
-        this.eventCodeResources.push({ eventCode: EventCode.GitPullSuccess, description: "Git pull successfully finished" });
-        this.eventCodeResources.push({ eventCode: EventCode.GitPullFailure, description: "Git pull error occured" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitFetching, description: "Fetching Git repository" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitFetchingSuccess, description: "Successfully fetched Git repository" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitFetchingFailure, description: "Error while fetching Git repository" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitMerging, description: "Merging incoming commits" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitMergingSucessMerged, description: "Succesfully merged incoming commits" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitMergingSucessNotMerged, description: "Repository up-to-date" });
+        this.eventCodeResources.push({ eventCode: EventCode.GitMergingFailure, description: "Error while merging incoming commits" });
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommit, description: "Checking Git commit for change" });
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommitChanged, description: "Git commit changed" });
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommitNoChange, description: "Latest git commit not changed" });
@@ -39,14 +44,19 @@ export enum EventCode {
     Error,
     GitNotInstalled,
     CreatingWorkspace,
+    CreatingWorkspaceAlreadyExists,
     CreatingWorkspaceSuccess,
     CreatingWorkspaceFailure,
     GitCloning,
     GitCloningSuccess,
     GitCloningFailure,
-    GitPull,
-    GitPullSuccess,
-    GitPullFailure,
+    GitFetching,
+    GitFetchingSuccess,
+    GitFetchingFailure,
+    GitMerging,
+    GitMergingSucessMerged,
+    GitMergingSucessNotMerged,
+    GitMergingFailure,
     GitUpdatingLastCommit,
     GitUpdatingLastCommitNoChange,
     GitUpdatingLastCommitChanged

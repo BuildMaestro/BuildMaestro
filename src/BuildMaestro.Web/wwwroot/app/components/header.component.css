@@ -1,6 +1,7 @@
 ﻿.bm-header {
     background-color: darkblue;
     height: 50px;
+    overflow: hidden;
 }
 
     .bm-header .title {
@@ -10,6 +11,16 @@
         margin-left: 10px;
         margin-top: 5px;
         padding: 0;
+    }
+
+    .bm-header .connection-state {
+        color: lightblue;
+        display: inline-block;   
+        float: right;
+        font-size: 20px;
+        margin-right: 10px;
+        margin-top: 10px;
+        padding: 0;  
     }
 
 .fa-beer:before {

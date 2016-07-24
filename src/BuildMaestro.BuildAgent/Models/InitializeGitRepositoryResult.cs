@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BuildMaestro.Shared.BuildAgent.Git
+namespace BuildMaestro.BuildAgent.Models
 {
-    public class ÚpdateWorkspaceResult
+    public class InitializeGitRepositoryResult
     {
-        public string ErrorMessage { get; set; }
+        public Exception Exception { get; set; }
+
         public bool Success { get; set; }
     }
 }

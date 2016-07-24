@@ -4,6 +4,7 @@ import { Component, Inject, OnInit, NgZone } from '@angular/core';
 import { CORE_DIRECTIVES } from '@angular/common';
 import { HeaderComponent } from './header.component';
 
+
 @Component({
     directives: [HeaderComponent, BuildConfigurationsComponent],
     moduleId: module.id,

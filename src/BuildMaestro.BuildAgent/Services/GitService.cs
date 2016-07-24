@@ -9,134 +9,224 @@ using BuildMaestro.BuildAgent.Core;
 using BuildMaestro.BuildAgent.Events;
 using BuildMaestro.Service;
 using BuildMaestro.Data.Models;
+using BuildMaestro.BuildAgent.Models;
+using System.Text;
 
 namespace BuildMaestro.BuildAgent.Services
 {
     public class GitService : Disposable
     {
+        const string GIT_DATE_FORMAT = "format:%Y-%m-%dT%H:%M:%S";
+
+        private ApplicationSettingService ApplicationSettingService { get; set; }
         private BuildAgentService BuildAgent { get; set; }
+        private BuildConfigurationService BuildConfigurationService { get; set; }
+        private GitCommitService GitCommitService  { get; set; }
         private ShellCommandService ShellCommand { get; set; }
 
         public GitService(BuildAgentService buildAgent)
         {
+            this.ApplicationSettingService = new ApplicationSettingService();
             this.BuildAgent = buildAgent;
+            this.BuildConfigurationService = new BuildConfigurationService();
+            this.GitCommitService = new GitCommitService();
             this.ShellCommand = new ShellCommandService();
         }
 
-        public ÚpdateWorkspaceResult ÚpdateWorkspace(BuildConfigurationModel buildConfiguration)
+        public InitializeWorkspaceResult InitializeWorkspace(BuildConfigurationModel buildConfiguration)
         {
-            var applicationSettingService = new ApplicationSettingService();
-            var workspace = applicationSettingService.GetSetting(ApplicationSettingKey.Workspace);
+            var result = new InitializeWorkspaceResult { Success = true };
+            var workspace = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.Workspace);
 
             if (!string.IsNullOrEmpty(workspace))
             {
                 var buildConfigurationWorkspace = Path.Combine(workspace, buildConfiguration.Id.ToString(), "Repository");
 
-                // Create workspace
+                // Check and/or create build configuration workspace
                 this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspace);
-                if (!Directory.Exists(buildConfigurationWorkspace))
-                {
-                    Directory.CreateDirectory(buildConfigurationWorkspace);
-                }
-                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceSuccess);
-
-
-                var GitResultCode = GitServiceEventCode.Unknown;
-
-                // Clone or Pull
                 try
                 {
-                    GitResultCode = this.CheckForGitRepository(buildConfigurationWorkspace, buildConfiguration);
-                }
-                catch (Exception exception)
-                {
-                    File.WriteAllText(Path.Combine(buildConfigurationWorkspace, "log.txt"), exception.Message);
-                }
+                    if (!Directory.Exists(buildConfigurationWorkspace))
+                    {
+                        Directory.CreateDirectory(buildConfigurationWorkspace);
 
-                if (GitResultCode == GitServiceEventCode.GitCloningSuccess || GitResultCode == GitServiceEventCode.GitPullSuccess)
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceSuccess);
+                    }
+                    else
+                    {
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceAlreadyExists);
+                    }
+
+                    result.WorkspaceDirectory = buildConfigurationWorkspace;
+                }
+                catch (Exception ex)
                 {
-                    // Check latest commit
+                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceFailure);
+
+                    result = new InitializeWorkspaceResult { Success = false, Exception = ex };
+                }
+            }
+
+            return result;
+        }
+
+        public InitializeGitRepositoryResult InitializeGitRepository(string buildConfigurationWorkspace, BuildConfigurationModel buildConfiguration)
+        {
+            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var result = new InitializeGitRepositoryResult { Success = true };
+
+            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
+            {
+                result = new InitializeGitRepositoryResult { Success = false, Exception = new Exception("Git executable not found.") };
+            }
+            else
+            {
+                var gitStatusResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, "status");
+
+                if (!string.IsNullOrEmpty(gitStatusResult.Output) && gitStatusResult.Output.ToLower().Contains("not a git repository"))
+                {
                     try
                     {
-                        GitResultCode = this.UpdateLatestCommit(buildConfigurationWorkspace, buildConfiguration);
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloning);
+
+                        var cloneResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace,
+                                                                                gitExecutable,
+                                                                                string.Concat("clone ", buildConfiguration.GitRepository, " ."));
+
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningSuccess);
                     }
-                    catch (Exception exception)
+                    catch (Exception ex)
                     {
-                        File.WriteAllText(Path.Combine(buildConfigurationWorkspace, "log.txt"), exception.Message);
+                        result = new InitializeGitRepositoryResult { Success = false, Exception = ex };
+
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningFailure);
                     }
                 }
             }
 
-            return new ÚpdateWorkspaceResult { Success = true };
+            return result;
         }
 
-        private GitServiceEventCode CheckForGitRepository(string buildConfigurationWorkspace, BuildConfigurationModel buildConfiguration)
+        public UpdateGitRepositoryResult UpdateGitRepository(string workspaceDirectory, BuildConfigurationModel buildConfiguration)
         {
-            var applicationSettingService = new ApplicationSettingService();
-            var gitExecutable = applicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Success };
 
-            GitServiceEventCode resultEventCode = GitServiceEventCode.Unknown;
-
-            if (!string.IsNullOrEmpty(gitExecutable))
+            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
             {
-                var gitStatusResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, "status");
-
-                if (!string.IsNullOrEmpty(gitStatusResult.Output))
+                result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git executable not found.") };
+            }
+            else
+            {
+                try
                 {
-                    if (gitStatusResult.Output.ToLower().Contains("not a git repository"))
+                    // Fetch new commits
+                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetching);
+
+                    var fetchResult = this.GitFetch(workspaceDirectory, gitExecutable);
+
+                    if (fetchResult.Success)
                     {
-                        // Git clone
-                        try
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetchingSuccess);
+
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMerging);
+
+                        // If incoming commits
+                        if (fetchResult.GitCommits != null && fetchResult.GitCommits.Any())
                         {
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloning);
+                            // If auto deploy
+                            if (buildConfiguration.AutoDeploy)
+                            {
+                                if (string.IsNullOrWhiteSpace(buildConfiguration.AutoDeployTags))
+                                {
+                                    try
+                                    {
+                                        var mergeResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, "merge");
 
-                            var cloneResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace,
-                                                                                    gitExecutable,
-                                                                                    string.Concat("clone ", buildConfiguration.GitRepository, " ."));
+                                        if (mergeResult.Output.Contains("updating") && mergeResult.Output.Contains("fast-forward"))
+                                        {
+                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessMerged);
+                                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessMerged;
+                                        }
+                                        else
+                                        {
+                                            // Investigate possible output scenarios
+                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
+                                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingFailure);
+                                        result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git merge error") };
+                                    }
+                                }
+                                else
+                                {
+                                    var tags = buildConfiguration.AutoDeployTags.Split(',').ToList();
 
-                            resultEventCode = GitServiceEventCode.GitCloningSuccess;
+                                    tags = tags.Select(x => x.Trim()).ToList(); // Trim tags
 
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningSuccess);
+                                    var latestAutoDeployCommit = fetchResult.GitCommits.OrderByDescending(o => o.DateTime).FirstOrDefault(x => tags.Any(tag => x.Message.Contains(tag)));
+
+                                    if (latestAutoDeployCommit != null)
+                                    {
+                                        // Auto deploy, so merge changes
+                                        try
+                                        {
+                                            var mergeResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, string.Concat("merge ", latestAutoDeployCommit.Hash));
+
+                                            if (mergeResult.Output.ToLower().Contains("updating") && mergeResult.Output.ToLower().Contains("fast-forward"))
+                                            {
+                                                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessMerged);
+                                                result.Success = UpdateGitRepositoryResultSuccesType.SuccessMerged;
+                                            }
+                                            else
+                                            {
+                                                // Investigate possible output scenarios
+                                                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
+                                                result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingFailure);
+                                            result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git merge error") };
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
+                                        result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
+                                    }
+                                }
+                            }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            resultEventCode = GitServiceEventCode.GitCloningFailure;
-
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningFailure);
+                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
+                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
                         }
                     }
                     else
                     {
-                        // Git pull
-                        try
-                        {
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitPull);
-
-                            var pullResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace,
-                                                                                    gitExecutable,
-                                                                                    "pull");
-
-                            resultEventCode = GitServiceEventCode.GitPullSuccess;
-
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitPullSuccess);
-                        }
-                        catch (Exception ex)
-                        {
-                            resultEventCode = GitServiceEventCode.GitPullFailure;
-
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitPullFailure);
-                        }
+                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetchingFailure);
+                        result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git fetch error") };
                     }
+                }
+                catch (Exception ex)
+                {
+                    result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = ex };
                 }
             }
 
-            return resultEventCode;
+            return result;
         }
 
         public GitServiceEventCode UpdateLatestCommit(string buildConfigurationWorkspace, BuildConfigurationModel buildConfiguration)
         {
-            var applicationSettingService = new ApplicationSettingService();
-            var gitExecutable = applicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
             GitServiceEventCode resultEventCode = GitServiceEventCode.Unknown;
 
             resultEventCode = GitServiceEventCode.GitUpdatingLastCommit;
@@ -144,101 +234,131 @@ namespace BuildMaestro.BuildAgent.Services
 
             if (!string.IsNullOrEmpty(gitExecutable))
             {
-                var gitStatusResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, "log -n 1 --date=format:%Y-%m-%dT%H:%M:%S");
+                var gitLogResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, string.Concat("log -n 1 --date=", GIT_DATE_FORMAT));
+                var lines = gitLogResult.Output.Split('\n');
+                var commit = this.GetGitCommitsFromLines(lines).Single();
 
-                if (!string.IsNullOrWhiteSpace(gitStatusResult.Output))
+                if (commit != null && (buildConfiguration.LatestGitCommit == null || buildConfiguration.LatestGitCommit.Hash != commit.Hash))
                 {
-                    var buildConfigurationService = new BuildConfigurationService();
-                    var gitCommit = this.GetGitCommitFromLogOutput(buildConfiguration, gitStatusResult.Output);
+                    this.BuildConfigurationService.SetGitCommit(buildConfiguration.Id, commit);
 
-                    if (gitCommit != null && (buildConfiguration.LatestGitCommit == null || buildConfiguration.LatestGitCommit.Hash != gitCommit.Hash))
-                    {
-                        buildConfigurationService.SetGitCommit(buildConfiguration.Id, gitCommit);
+                    var gitCommitModel = this.GitCommitService.GetGitCommitModel(commit);
 
-                        var gitCommitService = new GitCommitService();
-                        var gitCommitModel = gitCommitService.GetGitCommitModel(gitCommit);
-
-                        resultEventCode = GitServiceEventCode.GitUpdatingLastCommitChanged;
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitChanged, gitCommitModel);
-                    }
-                    else
-                    {
-                        resultEventCode = GitServiceEventCode.GitUpdatingLastCommitNoChange;
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitNoChange);
-                    }
+                    resultEventCode = GitServiceEventCode.GitUpdatingLastCommitChanged;
+                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitChanged, gitCommitModel);
+                }
+                else
+                {
+                    resultEventCode = GitServiceEventCode.GitUpdatingLastCommitNoChange;
+                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitNoChange);
                 }
             }
 
             return resultEventCode;
         }
 
-        private GitCommit GetGitCommitFromLogOutput(BuildConfigurationModel buildConfiguration, string output)
+        private GitFetchResult GitFetch(string workspaceDirectory, string gitExecutable)
         {
-            var commitAuthor = string.Empty;
-            DateTime? commitDate = null;
-            var commitHash = string.Empty;
-            var lines = output.Split('\n');
+            var result = new GitFetchResult { Success = true };
 
-            // Check readability of output;
-            if (lines.Length < 5)
+            try
             {
-                return null;
+                var fetchResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, "fetch");
+                var logIncomingCommitsResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, string.Concat("log master..origin/master --date=", GIT_DATE_FORMAT));
+                var incomingCommits = GetIncommingCommitsFromFetchLogOutput(logIncomingCommitsResult.Output);
+
+                result = new GitFetchResult { Success = true, GitCommits = incomingCommits };
             }
-            
-            // Check for commit hash
-            var hashLine = lines[0];
-            if (hashLine.Length != 47 || hashLine.Split(' ').Length != 2)
+            catch (Exception ex)
             {
-                return null;
-            }
-            else
-            {
-                commitHash = hashLine.Split(' ')[1];
+                result = new GitFetchResult { Success = false, Exception = ex };
             }
 
-            // Check for commit author
-            var authorLine = lines[1];
-            var authorString = "author:";
-            if (!authorLine.ToLower().StartsWith(authorString) || authorLine.Split(':').Length != 2)
-            {
-                return null;
-            }
-            else
-            {
-                commitAuthor = authorLine.Split(':')[1].Trim();
-            }
-
-            // Check for commit date
-            var dateLine = lines[2];
-            var dateString = "date:";
-            if (!dateLine.ToLower().StartsWith(dateString) || dateLine.Length <= dateString.Length)
-            {
-                return null;
-            }
-            else
-            {
-                var commitDateTimeString = dateLine.Substring(dateString.Length + 1).Trim();
-                var splittedDateTime = commitDateTimeString.Split('T');
-                var commitDateSplitted = splittedDateTime[0].Split('-');
-                var commitTimeSplitted = splittedDateTime[1].Split(':');
-
-                commitDate = new DateTime(Convert.ToInt16(commitDateSplitted[0]),
-                                          Convert.ToInt16(commitDateSplitted[1]),
-                                          Convert.ToInt16(commitDateSplitted[2]),
-                                          Convert.ToInt16(commitTimeSplitted[0]),
-                                          Convert.ToInt16(commitTimeSplitted[1]),
-                                          Convert.ToInt16(commitTimeSplitted[2]));
-            }
-
-            return new GitCommit
-            {
-                Author = commitAuthor,
-                BuildConfigurationId = buildConfiguration.Id,
-                DateTime = commitDate.Value,
-                Hash = commitHash,
-                Branch = buildConfiguration.GitBranch,
-                Repository = buildConfiguration.GitRepository,
-            };
+            return result;
         }
+
+        private List<GitCommit> GetIncommingCommitsFromFetchLogOutput(string output)
+        {
+            var result = new List<GitCommit>();
+
+            if (string.IsNullOrWhiteSpace(output))
+            {
+                return result;
+            }
+
+            var outputLines = output.Split('\n');
+            if (outputLines.Length < 5)
+            {
+                return result;
+            }
+
+            return this.GetGitCommitsFromLines(outputLines);
+        }
+
+        private List<GitCommit> GetGitCommitsFromLines(string[] lines)
+        {
+            var gitCommits = new List<GitCommit>();
+            var lineIndex = 0;
+            GitCommit newCommit = null;
+            StringBuilder newCommitMessage = new StringBuilder();
+
+            // Populate gitCommits from output lines
+            while (lineIndex < lines.Length)
+            {
+                var line = lines[lineIndex];
+
+                if (line.ToLower().StartsWith("commit "))
+                {
+                    if (newCommit == null)
+                    {
+                        newCommit = new GitCommit();
+                        newCommit.Hash = line.Substring(7);
+                        newCommitMessage.Clear();
+                    }
+                    else
+                    {
+                        newCommit.Message = newCommitMessage.ToString().Trim();
+                        gitCommits.Add(newCommit);
+
+                        newCommit = new GitCommit();
+                        newCommit.Hash = line.Substring(7);
+                        newCommitMessage.Clear();
+                    }
+                }
+                else if (line.ToLower().StartsWith("author:"))
+                {
+                    newCommit.Author = line.Split(':')[1].Trim();
+                }
+                else if (line.ToLower().StartsWith("date:"))
+                {
+                    var commitDateTimeString = line.Substring(line.IndexOf(":") + 1).Trim();
+                    var splittedDateTime = commitDateTimeString.Split('T');
+                    var commitDateSplitted = splittedDateTime[0].Split('-');
+                    var commitTimeSplitted = splittedDateTime[1].Split(':');
+
+                    newCommit.DateTime = new DateTime(Convert.ToInt16(commitDateSplitted[0]),
+                                                      Convert.ToInt16(commitDateSplitted[1]),
+                                                      Convert.ToInt16(commitDateSplitted[2]),
+                                                      Convert.ToInt16(commitTimeSplitted[0]),
+                                                      Convert.ToInt16(commitTimeSplitted[1]),
+                                                      Convert.ToInt16(commitTimeSplitted[2]));
+                }
+                else
+                {
+                    newCommitMessage.AppendLine(line);
+                }
+
+                lineIndex++;
+            }
+
+            if (newCommit != null)
+            {
+                newCommit.Message = newCommitMessage.ToString().Trim();
+                gitCommits.Add(newCommit);
+            }
+
+            return gitCommits;
+        }
+
     }
 }

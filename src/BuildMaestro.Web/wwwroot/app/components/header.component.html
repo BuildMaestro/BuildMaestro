@@ -1,3 +1,6 @@
 ﻿<div class="bm-header">
     <span class="title bounce-in">{{title}}</span>
+    <span class="connection-state" *ngIf="connectionState == ConnectionState.Connecting">Connecting</span>
+    <span class="connection-state" *ngIf="connectionState == ConnectionState.Connected">Connected</span>
+    <span class="connection-state" *ngIf="connectionState == ConnectionState.Disconnected">Disconnected</span>
 </div>

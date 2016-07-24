@@ -63,14 +63,14 @@ namespace BuildMaestro.BuildAgent
                     System.Threading.Tasks.Task.Delay(WORKER_WAIT_DELAY).Wait();
                 }
 
-                this.WorkerUpdateWorkspaces();
+                this.WorkerRunBuildConfigurations();
 
                 lastRun = DateTime.UtcNow;
             }
 
         }
 
-        private void WorkerUpdateWorkspaces()
+        private void WorkerRunBuildConfigurations()
         {
             var buildConfigurationService = new BuildConfigurationService();
             var buildConfigurations = buildConfigurationService.GetBuildConfigurations();
@@ -79,7 +79,27 @@ namespace BuildMaestro.BuildAgent
             {
                 foreach (var buildConfiguration in buildConfigurations)
                 {
-                    gitService.ÚpdateWorkspace(buildConfiguration);
+                    // Run build confiration
+                    var initializeWorkspaceResult = gitService.InitializeWorkspace(buildConfiguration);
+                    if (!initializeWorkspaceResult.Success)
+                    {
+                        continue;
+                    }
+
+                    var initializeGitRepositoryResult = gitService.InitializeGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+                    if (!initializeGitRepositoryResult.Success)
+                    {
+                        continue;
+                    }
+
+                    var updateGitRepositoryResult = gitService.UpdateGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+                    if (updateGitRepositoryResult.Success != Models.UpdateGitRepositoryResultSuccesType.SuccessMerged )
+                    {
+                        continue;
+                    }
+
+                    var updateLatestCommitResultGitEventCode = gitService.UpdateLatestCommit(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+
                 }
             }
         }

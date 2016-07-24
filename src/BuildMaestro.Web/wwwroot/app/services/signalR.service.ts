@@ -27,23 +27,41 @@ export class SignalRService {
         this.startConnection();
     }
 
-    private startConnection(): void {
-        this.connection.start().done((data) => {
+    public startConnection(): void {
+        var self = this;
+
+        self.connection.start().done((data) => {
             console.log('Now connected ' + data.transport.name + ', connection ID= ' + data.id);
-            this.connectionEstablished.emit(true);
-            this.connectionExists = true;
+
+            self.connectionEstablished.emit(true);
+            self.connectionExists = true;
         }).fail((error) => {
             console.log('Could not connect ' + error);
-            this.connectionEstablished.emit(false);
+
+            self.connectionEstablished.emit(false);
+        });
+
+        self.connection.disconnected(function () {
+            console.log('Now disconnected');
+
+            self.connectionEstablished.emit(false);
+            self.connectionExists = false;
+
+            setTimeout(function () {
+                self.startConnection();
+            }, 5000); 
         });
     }
+
 
     private registerOnServerEvents(): void {
         this.proxy.on('statusChange', (buildConfigurationId: number, eventCode: number, data: any) => {
             var statusChangeEvent = new StatusChangeEvent();
+
             statusChangeEvent.buildConfigurationId = buildConfigurationId;
             statusChangeEvent.eventCode = eventCode;
             statusChangeEvent.data = JSON.parse(data);
+
             this.statusChanged.emit(statusChangeEvent);
         });
     }

@@ -1,5 +1,6 @@
 ﻿/// <autosync enabled="true" />
 /// <reference path="../gulpfile.js" />
+/// <reference path="../Vendor/jquery.signalR/jquery.signalR.js" />
 /// <reference path="app/components/app.component.js" />
 /// <reference path="app/components/buildconfiguration.component.js" />
 /// <reference path="app/components/buildconfigurations.component.js" />

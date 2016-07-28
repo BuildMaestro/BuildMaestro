@@ -13,10 +13,9 @@ gulp.task('default', function () {
     // place code for your default task here
 });
 
-gulp.task('build', function () {
-    process.stdout.write('Starting rollup.\n');
-
+gulp.task('copy-libs', function () {
     // Copy/Populate libs folder from dependencies
+    process.stdout.write('Copy/Populate libs folder from dependencies...\n');
 
     gulp.src('./node_modules/font-awesome/**/*.*')
     .pipe(gulp.dest('./wwwroot/lib/font-awesome'));
@@ -36,7 +35,7 @@ gulp.task('build', function () {
     gulp.src('./node_modules/rxjs/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/rxjs'));
 
-    gulp.src('./node_modules/jquery/dist/*.js')
+    gulp.src('./node_modules/jquery/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/jquery'));
 
     gulp.src('./vendor/jquery.signalR/*.js')

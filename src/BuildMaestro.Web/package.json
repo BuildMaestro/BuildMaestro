@@ -36,7 +36,7 @@
   },
   "private": true,
   "scripts": {
-    "postinstall": "npm run typings install && concurrently \"gulp copy-libs",
+    "postinstall": "npm run typings install,
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "lite": "lite-server",

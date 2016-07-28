@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 namespace BuildMaestro.BuildAgent.Services
 {
-    public class ShellCommandServiceResult
+    internal class ShellCommandServiceResult
     {
         public ShellCommandServiceResultType Type { get; set; }
 
         public string Output { get; set; }
     }
 
-    public enum ShellCommandServiceResultType
+    internal enum ShellCommandServiceResultType
     {
         Error,
         Success

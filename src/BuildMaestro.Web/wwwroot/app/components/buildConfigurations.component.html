@@ -1,8 +1,4 @@
-﻿<div class="buttons">
-    <input type="button" value="Start build agent" (click)="start()" />
-    <input type="button" value="Stop build agent" (click)="stop()" />
-</div>
-<ul>
+﻿<ul class="buildconfigurations-list">
     <li *ngFor="let buildConfiguration of buildConfigurations"> 
         <build-configuration [configuration]="buildConfiguration"></build-configuration>
     </li>

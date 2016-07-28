@@ -15,9 +15,9 @@ namespace BuildMaestro.Data.Models
 
         public string Branch { get; set; }
 
-        public virtual BuildConfiguration BuildConfiguration { get; set; }
+        public virtual RepositoryConfiguration RepositoryConfiguration{ get; set; }
 
-        public int BuildConfigurationId { get; set; }
+        public int RepositoryConfigurationId { get; set; }
 
         public DateTime DateTime { get; set; }
 

@@ -1,4 +1,10 @@
-﻿.content {
+﻿.page-header {
     margin-left: 10px;
     margin-right: 10px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.page-header .title {
+    font-size: 24px;
 }

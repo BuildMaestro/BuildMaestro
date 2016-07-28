@@ -13,3 +13,17 @@ li {
     margin-left: 10px;
     margin-right: 10px;
 }
+
+
+.buildconfigurations-list {
+    height: auto;
+    max-height: inherit;
+    overflow: hidden;
+}
+
+    .buildconfigurations-list.hide {
+        max-height: 0;
+        transition-property: all;
+        transition-duration: 1.5s;
+        transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+    }

@@ -13,6 +13,8 @@ namespace BuildMaestro.Data
     {
         public DbSet<Models.ApplicationSetting> AplicationSettings { get; set; }
         public DbSet<Models.BuildConfiguration> BuildConfigurations { get; set; }
+        public DbSet<Models.MsBuildConfiguration> MsBuildConfigurations { get; set; }
+        public DbSet<Models.BuildConfiguration> RepositoryConfigurations { get; set; }
 
         public string ConnectionString { get; set; }
 
@@ -49,10 +51,19 @@ namespace BuildMaestro.Data
                 modelBuilder.Entity(entity.Name).ToTable(entity.Name + "s");
             }
 
-            //one-to-many 
-            modelBuilder.Entity<GitCommit>()
+            modelBuilder.Entity<RepositoryConfiguration>()
                         .HasOne<BuildConfiguration>(s => s.BuildConfiguration)
+                        .WithMany(s => s.RepositoryConfigurations)
+                        .HasForeignKey(s => s.BuildConfigurationId);
+
+            modelBuilder.Entity<GitCommit>()
+                        .HasOne<RepositoryConfiguration>(s => s.RepositoryConfiguration)
                         .WithMany(s => s.GitCommits)
+                        .HasForeignKey(s => s.RepositoryConfigurationId);
+
+            modelBuilder.Entity<MsBuildConfiguration>()
+                        .HasOne<BuildConfiguration>(s => s.BuildConfiguration)
+                        .WithMany(x => x.MsBuildConfigurations)
                         .HasForeignKey(s => s.BuildConfigurationId);
         }
     }

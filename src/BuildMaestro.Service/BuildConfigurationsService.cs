@@ -17,28 +17,28 @@ namespace BuildMaestro.Service
 
             using (var context = new BuildMaestroContext())
             {
-                var buildConfigurations = context.BuildConfigurations.Include(x => x.GitCommits);
+                var buildConfigurations = context.BuildConfigurations.Include(x => x.RepositoryConfigurations);
 
-                foreach(var config in buildConfigurations)
+                foreach(var buildConfiguration in buildConfigurations)
                 {
-                    var latestCommit = config.GitCommits.OrderByDescending(commit => commit.DateTime).FirstOrDefault();
+                    var latestCommit = buildConfiguration.RepositoryConfigurations.SelectMany(s => s.GitCommits).OrderByDescending(commit => commit.DateTime).FirstOrDefault();
                     var applicationSettingService = new ApplicationSettingService();
                     var dateTimeFormat = applicationSettingService.GetSetting(ApplicationSettingKey.DateTimeFormat);
 
                     result.Add(new BuildConfigurationModel
                     {
-                        AutoDeploy = config.AutoDeploy,
-                        AutoDeployTags = config.AutoDeployTags,
-                        LatestGitCommit = latestCommit == null ? null : new GitCommitModel
+                        Id = buildConfiguration.Id,
+                        Name = buildConfiguration.Name,
+                        RepositoryConfigurations = buildConfiguration.RepositoryConfigurations.Select((repositoryConfiguration) => new RepositoryConfigurationModel
                         {
-                            Author = latestCommit.Author,
-                            DateTime = latestCommit.DateTime.ToString(dateTimeFormat),
-                            Hash = latestCommit.Hash,
-                            Message = latestCommit.Message
-                        },
-                        GitRepository = config.GitRepository,
-                        Id = config.Id,
-                        Name = config.Name
+                            Id = repositoryConfiguration.Id,
+                            Active = repositoryConfiguration.Active,
+                            AutoUpdate = repositoryConfiguration.AutoUpdate,
+                            AutoUpdateTag = repositoryConfiguration.AutoUpdateTag,
+                            Branch = repositoryConfiguration.Branch,
+                            RelativeSolutionFile = repositoryConfiguration.RelativeSolutionFileLocation,
+                            RepositoryUrl = repositoryConfiguration.RepositoryUrl
+                        }).ToList()
                     });
                 }
             }
@@ -46,21 +46,19 @@ namespace BuildMaestro.Service
             return result;
         }
 
-        public bool SetGitCommit(int buildConfigurationId, GitCommit gitCommit)
-        {
-            using (var context = new BuildMaestroContext())
-            {
-                var buildConfiguration = context.BuildConfigurations.SingleOrDefault(x => x.Id == buildConfigurationId);
+        //public bool SetGitCommit(RepositoryConfiguration repositoryConfiguration, GitCommit gitCommit)
+        //{
+        //    using (var context = new BuildMaestroContext())
+        //    {
+        //        if (repositoryConfiguration != null)
+        //        {
+        //            repositoryConfiguration.GitCommits.Add(gitCommit);
 
-                if (buildConfiguration != null)
-                {
-                    buildConfiguration.GitCommits.Add(gitCommit);
+        //            context.SaveChanges();
+        //        }
+        //    }
 
-                    context.SaveChanges();
-                }
-            }
-
-            return true;
-        }
+        //    return true;
+        //}
     }
 }

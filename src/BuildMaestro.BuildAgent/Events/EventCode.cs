@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace BuildMaestro.BuildAgent.Events
 {
     // Corresponds to wwwroot/app/services/event-codes.model.ts
-    public enum GitServiceEventCode
+    public enum EventCode
     {
         Unknown,
         Error,
@@ -27,6 +27,12 @@ namespace BuildMaestro.BuildAgent.Events
         GitMergingFailure,
         GitUpdatingLastCommit,
         GitUpdatingLastCommitNoChange,
-        GitUpdatingLastCommitChanged
+        GitUpdatingLastCommitChanged,
+        BuildStarted,
+        BuildSuccess,
+        BuildFailure,
+        NugetRestoreStarted,
+        NugetRestoreSuccess,
+        NugetRestoreFailure
     }
 }

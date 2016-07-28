@@ -34,21 +34,9 @@ namespace BuildMaestro.Data.Migrations
 
                     b.Property<bool>("Active");
 
-                    b.Property<bool>("AutoDeploy");
-
-                    b.Property<string>("AutoDeployTags");
-
-                    b.Property<bool>("CleanWorkspace");
-
                     b.Property<bool>("Enabled");
 
-                    b.Property<string>("GitBranch");
-
-                    b.Property<string>("GitRepository");
-
                     b.Property<string>("Name");
-
-                    b.Property<string>("RelativeSolutionFileLocation");
 
                     b.HasKey("Id");
 
@@ -64,8 +52,6 @@ namespace BuildMaestro.Data.Migrations
 
                     b.Property<string>("Branch");
 
-                    b.Property<int>("BuildConfigurationId");
-
                     b.Property<DateTime>("DateTime");
 
                     b.Property<string>("Hash");
@@ -74,12 +60,72 @@ namespace BuildMaestro.Data.Migrations
 
                     b.Property<string>("Repository");
 
+                    b.Property<int>("RepositoryConfigurationId");
+
                     b.HasKey("Id");
 
                     b.HasAnnotation("Relational:TableName", "BuildMaestro.Data.Models.GitCommits");
                 });
 
+            modelBuilder.Entity("BuildMaestro.Data.Models.MsBuildConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Active");
+
+                    b.Property<int>("BuildConfigurationId");
+
+                    b.Property<int?>("RepositoryConfigurationId");
+
+                    b.HasKey("Id");
+
+                    b.HasAnnotation("Relational:TableName", "BuildMaestro.Data.Models.MsBuildConfigurations");
+                });
+
+            modelBuilder.Entity("BuildMaestro.Data.Models.RepositoryConfiguration", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("Active");
+
+                    b.Property<bool>("AutoUpdate");
+
+                    b.Property<string>("AutoUpdateTag");
+
+                    b.Property<string>("Branch");
+
+                    b.Property<int>("BuildConfigurationId");
+
+                    b.Property<string>("RelativeSolutionFileLocation");
+
+                    b.Property<string>("RepositoryUrl");
+
+                    b.HasKey("Id");
+
+                    b.HasAnnotation("Relational:TableName", "BuildMaestro.Data.Models.RepositoryConfigurations");
+                });
+
             modelBuilder.Entity("BuildMaestro.Data.Models.GitCommit", b =>
+                {
+                    b.HasOne("BuildMaestro.Data.Models.RepositoryConfiguration")
+                        .WithMany()
+                        .HasForeignKey("RepositoryConfigurationId");
+                });
+
+            modelBuilder.Entity("BuildMaestro.Data.Models.MsBuildConfiguration", b =>
+                {
+                    b.HasOne("BuildMaestro.Data.Models.BuildConfiguration")
+                        .WithMany()
+                        .HasForeignKey("BuildConfigurationId");
+
+                    b.HasOne("BuildMaestro.Data.Models.RepositoryConfiguration")
+                        .WithMany()
+                        .HasForeignKey("RepositoryConfigurationId");
+                });
+
+            modelBuilder.Entity("BuildMaestro.Data.Models.RepositoryConfiguration", b =>
                 {
                     b.HasOne("BuildMaestro.Data.Models.BuildConfiguration")
                         .WithMany()

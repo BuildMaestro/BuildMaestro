@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace BuildMaestro.BuildAgent.Models
 {
-    public class UpdateGitRepositoryResult
+    public class BuildResult
     {
-        public Exception Exception { get; set; }
         public bool Success { get; set; }
     }
 }

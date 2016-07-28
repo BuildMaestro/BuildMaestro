@@ -18,6 +18,8 @@ namespace BuildMaestro.Data.Models
     {
         Workspace = 0,
         GitExecutable = 1,
-        DateTimeFormat = 2
+        DateTimeFormat = 2,
+        MsBuildExecutable = 3,
+        NugetExecutable = 4
     }
 }

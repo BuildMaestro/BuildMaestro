@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BuildMaestro.BuildAgent.Services
 {
-    public class ShellCommandService
+    internal class ShellCommandService
     {
         public ShellCommandServiceResult ExecuteShellCommand(string directory, string command, string args)
         {

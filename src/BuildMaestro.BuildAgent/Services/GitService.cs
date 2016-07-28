@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BuildMaestro.Shared.BuildAgent.Git;
 using BuildMaestro.Shared.Models;
 using System.IO;
 using BuildMaestro.BuildAgent.Core;
-using BuildMaestro.BuildAgent.Events;
 using BuildMaestro.Service;
 using BuildMaestro.Data.Models;
 using BuildMaestro.BuildAgent.Models;
@@ -14,14 +12,14 @@ using System.Text;
 
 namespace BuildMaestro.BuildAgent.Services
 {
-    public class GitService : Disposable
+    internal class GitService : Disposable
     {
         const string GIT_DATE_FORMAT = "format:%Y-%m-%dT%H:%M:%S";
 
         private ApplicationSettingService ApplicationSettingService { get; set; }
         private BuildAgentService BuildAgent { get; set; }
         private BuildConfigurationService BuildConfigurationService { get; set; }
-        private GitCommitService GitCommitService  { get; set; }
+        private GitCommitService GitCommitService { get; set; }
         private ShellCommandService ShellCommand { get; set; }
 
         public GitService(BuildAgentService buildAgent)
@@ -33,228 +31,23 @@ namespace BuildMaestro.BuildAgent.Services
             this.ShellCommand = new ShellCommandService();
         }
 
-        public InitializeWorkspaceResult InitializeWorkspace(BuildConfigurationModel buildConfiguration)
+        public async Task<GitRunResult> Run(BuildConfigurationModel buildConfiguration)
         {
-            var result = new InitializeWorkspaceResult { Success = true };
-            var workspace = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.Workspace);
+            var result = new GitRunResult { Success = false };
 
-            if (!string.IsNullOrEmpty(workspace))
+            var gitTasks = buildConfiguration.RepositoryConfigurations.Select((repositoryConfiguration) => UpdateGitRepository(buildConfiguration, repositoryConfiguration));
+            var gitresults = await Task.WhenAll(gitTasks);
+
+            if (gitresults.Any(gitResult => result.Success = false))
             {
-                var buildConfigurationWorkspace = Path.Combine(workspace, buildConfiguration.Id.ToString(), "Repository");
+                result.Success = false;
 
-                // Check and/or create build configuration workspace
-                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspace);
-                try
-                {
-                    if (!Directory.Exists(buildConfigurationWorkspace))
-                    {
-                        Directory.CreateDirectory(buildConfigurationWorkspace);
-
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceSuccess);
-                    }
-                    else
-                    {
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceAlreadyExists);
-                    }
-
-                    result.WorkspaceDirectory = buildConfigurationWorkspace;
-                }
-                catch (Exception ex)
-                {
-                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, Events.GitServiceEventCode.CreatingWorkspaceFailure);
-
-                    result = new InitializeWorkspaceResult { Success = false, Exception = ex };
-                }
+                return result;
             }
+
+            result.Success = false;
 
             return result;
-        }
-
-        public InitializeGitRepositoryResult InitializeGitRepository(string buildConfigurationWorkspace, BuildConfigurationModel buildConfiguration)
-        {
-            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
-            var result = new InitializeGitRepositoryResult { Success = true };
-
-            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
-            {
-                result = new InitializeGitRepositoryResult { Success = false, Exception = new Exception("Git executable not found.") };
-            }
-            else
-            {
-                var gitStatusResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, "status");
-
-                if (!string.IsNullOrEmpty(gitStatusResult.Output) && gitStatusResult.Output.ToLower().Contains("not a git repository"))
-                {
-                    try
-                    {
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloning);
-
-                        var cloneResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace,
-                                                                                gitExecutable,
-                                                                                string.Concat("clone ", buildConfiguration.GitRepository, " ."));
-
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningSuccess);
-                    }
-                    catch (Exception ex)
-                    {
-                        result = new InitializeGitRepositoryResult { Success = false, Exception = ex };
-
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitCloningFailure);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        public UpdateGitRepositoryResult UpdateGitRepository(string workspaceDirectory, BuildConfigurationModel buildConfiguration)
-        {
-            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
-            var result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Success };
-
-            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
-            {
-                result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git executable not found.") };
-            }
-            else
-            {
-                try
-                {
-                    // Fetch new commits
-                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetching);
-
-                    var fetchResult = this.GitFetch(workspaceDirectory, gitExecutable);
-
-                    if (fetchResult.Success)
-                    {
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetchingSuccess);
-
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMerging);
-
-                        // If incoming commits
-                        if (fetchResult.GitCommits != null && fetchResult.GitCommits.Any())
-                        {
-                            // If auto deploy
-                            if (buildConfiguration.AutoDeploy)
-                            {
-                                if (string.IsNullOrWhiteSpace(buildConfiguration.AutoDeployTags))
-                                {
-                                    try
-                                    {
-                                        var mergeResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, "merge");
-
-                                        if (mergeResult.Output.Contains("updating") && mergeResult.Output.Contains("fast-forward"))
-                                        {
-                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessMerged);
-                                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessMerged;
-                                        }
-                                        else
-                                        {
-                                            // Investigate possible output scenarios
-                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
-                                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingFailure);
-                                        result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git merge error") };
-                                    }
-                                }
-                                else
-                                {
-                                    var tags = buildConfiguration.AutoDeployTags.Split(',').ToList();
-
-                                    tags = tags.Select(x => x.Trim()).ToList(); // Trim tags
-
-                                    var latestAutoDeployCommit = fetchResult.GitCommits.OrderByDescending(o => o.DateTime).FirstOrDefault(x => tags.Any(tag => x.Message.Contains(tag)));
-
-                                    if (latestAutoDeployCommit != null)
-                                    {
-                                        // Auto deploy, so merge changes
-                                        try
-                                        {
-                                            var mergeResult = this.ShellCommand.ExecuteShellCommand(workspaceDirectory, gitExecutable, string.Concat("merge ", latestAutoDeployCommit.Hash));
-
-                                            if (mergeResult.Output.ToLower().Contains("updating") && mergeResult.Output.ToLower().Contains("fast-forward"))
-                                            {
-                                                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessMerged);
-                                                result.Success = UpdateGitRepositoryResultSuccesType.SuccessMerged;
-                                            }
-                                            else
-                                            {
-                                                // Investigate possible output scenarios
-                                                this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
-                                                result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingFailure);
-                                            result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git merge error") };
-                                        }
-
-                                    }
-                                    else
-                                    {
-                                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
-                                        result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitMergingSucessNotMerged);
-                            result.Success = UpdateGitRepositoryResultSuccesType.SuccessNotMerged;
-                        }
-                    }
-                    else
-                    {
-                        this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitFetchingFailure);
-                        result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = new Exception("Git fetch error") };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    result = new UpdateGitRepositoryResult { Success = UpdateGitRepositoryResultSuccesType.Failure, Exception = ex };
-                }
-            }
-
-            return result;
-        }
-
-        public GitServiceEventCode UpdateLatestCommit(string buildConfigurationWorkspace, BuildConfigurationModel buildConfiguration)
-        {
-            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
-            GitServiceEventCode resultEventCode = GitServiceEventCode.Unknown;
-
-            resultEventCode = GitServiceEventCode.GitUpdatingLastCommit;
-            this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommit);
-
-            if (!string.IsNullOrEmpty(gitExecutable))
-            {
-                var gitLogResult = this.ShellCommand.ExecuteShellCommand(buildConfigurationWorkspace, gitExecutable, string.Concat("log -n 1 --date=", GIT_DATE_FORMAT));
-                var lines = gitLogResult.Output.Split('\n');
-                var commit = this.GetGitCommitsFromLines(lines).Single();
-
-                if (commit != null && (buildConfiguration.LatestGitCommit == null || buildConfiguration.LatestGitCommit.Hash != commit.Hash))
-                {
-                    this.BuildConfigurationService.SetGitCommit(buildConfiguration.Id, commit);
-
-                    var gitCommitModel = this.GitCommitService.GetGitCommitModel(commit);
-
-                    resultEventCode = GitServiceEventCode.GitUpdatingLastCommitChanged;
-                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitChanged, gitCommitModel);
-                }
-                else
-                {
-                    resultEventCode = GitServiceEventCode.GitUpdatingLastCommitNoChange;
-                    this.BuildAgent.OnStatusChangeEvent(buildConfiguration.Id, GitServiceEventCode.GitUpdatingLastCommitNoChange);
-                }
-            }
-
-            return resultEventCode;
         }
 
         private GitFetchResult GitFetch(string workspaceDirectory, string gitExecutable)
@@ -360,5 +153,205 @@ namespace BuildMaestro.BuildAgent.Services
             return gitCommits;
         }
 
+        private string GetWorkspaceRepositoriesRootPath(BuildConfigurationModel buildConfiguration)
+        {
+            var workspace = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.Workspace);
+            var buildConfigurationWorkspace = Path.Combine(workspace, buildConfiguration.Id.ToString());
+            var workspaceRepositoriesRootPath = Path.Combine(buildConfigurationWorkspace, "Repositories");
+
+            return workspaceRepositoriesRootPath;
+        }
+
+        private string GetWorkspaceOutputRootPath(BuildConfigurationModel buildConfiguration)
+        {
+            var workspace = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.Workspace);
+            var buildConfigurationWorkspace = Path.Combine(workspace, buildConfiguration.Id.ToString());
+            var workspaceRepositoriesRootPath = Path.Combine(buildConfigurationWorkspace, "Output");
+
+            return workspaceRepositoriesRootPath;
+        }
+
+        private InitializeGitRepositoryResult InitializeGitRepository(BuildConfigurationModel buildConfiguration, RepositoryConfigurationModel repositoryConfiguration)
+        {
+            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var result = new InitializeGitRepositoryResult { Success = false };
+            var repositoriesRoot = this.GetWorkspaceRepositoriesRootPath(buildConfiguration);
+            var repositoryFolder = Path.Combine(repositoriesRoot, repositoryConfiguration.RelativeSolutionFilePath);
+
+            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
+            {
+                return new InitializeGitRepositoryResult { Success = false, Exception = new Exception("Git executable not found.") };
+            }
+
+            if (!Directory.Exists(repositoryFolder))
+            {
+                Directory.CreateDirectory(repositoryFolder);
+            }
+
+            var gitStatusResult = this.ShellCommand.ExecuteShellCommand(repositoryFolder, gitExecutable, "status");
+
+            if (!string.IsNullOrEmpty(gitStatusResult.Output) && gitStatusResult.Output.ToLower().Contains("not a git repository"))
+            {
+                try
+                {
+                    var cloneResult = this.ShellCommand.ExecuteShellCommand(repositoryFolder,
+                                                                            gitExecutable,
+                                                                            string.Concat("clone ", repositoryConfiguration.RepositoryUrl, " ."));
+
+                    result.Success = true;
+                }
+                catch (Exception ex)
+                {
+                    result = new InitializeGitRepositoryResult { Success = false, Exception = ex };
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(gitStatusResult.Output) && gitStatusResult.Output.ToLower().Contains("branch is up-to-date"))
+                {
+                    result.Success = true;
+                }
+            }
+
+            return result;
+        }
+
+        private InitializeWorkspaceResult InitializeWorkspace(BuildConfigurationModel buildConfiguration)
+        {
+            var result = new InitializeWorkspaceResult { Success = false };
+            var repositoriesRoot = this.GetWorkspaceRepositoriesRootPath(buildConfiguration);
+
+            try
+            {
+                if (!Directory.Exists(repositoriesRoot))
+                {
+                    Directory.CreateDirectory(repositoriesRoot);
+                }
+
+                result.Success = true;
+            }
+            catch (Exception ex)
+            {
+                result = new InitializeWorkspaceResult { Success = false, Exception = ex };
+            }
+
+            return result;
+        }
+
+        private SyncGitRepositoryResult SyncGitRepository(BuildConfigurationModel buildConfiguration, RepositoryConfigurationModel repositoryConfiguration)
+        {
+            var gitExecutable = this.ApplicationSettingService.GetSetting(ApplicationSettingKey.GitExecutable);
+            var repositoriesRoot = this.GetWorkspaceRepositoriesRootPath(buildConfiguration);
+            var repositoryFolder = Path.Combine(repositoriesRoot, repositoryConfiguration.RelativeSolutionFilePath);
+            var result = new SyncGitRepositoryResult { Success = false };
+
+            if (string.IsNullOrWhiteSpace(gitExecutable) || !File.Exists(gitExecutable))
+            {
+                return new SyncGitRepositoryResult { Success = false, Exception = new Exception("Git executable not found.") };
+            }
+
+            var fetchResult = this.GitFetch(repositoryFolder, gitExecutable);
+
+            if (fetchResult.Success)
+            {
+                // If incoming commits
+                if (fetchResult.GitCommits != null && fetchResult.GitCommits.Any())
+                {
+                    // If auto deploy
+                    if (repositoryConfiguration.AutoUpdate)
+                    {
+                        var mergeResult = this.SyncGitRepositoryMerge(fetchResult.GitCommits, repositoryConfiguration.AutoUpdateTag, repositoryFolder, gitExecutable);
+
+                        if (mergeResult.Success)
+                        {
+                            result.Success = true;
+                        }
+                        else
+                        {
+                            result.Exception = new Exception("Git merge error");
+                            result.Success = false;
+                        }
+                    }
+                    else
+                    {
+                        result.Success = true;
+                    }
+                }
+                else
+                {
+                    result.Success = true;
+                }
+            }
+            else
+            {
+                result.Exception = new Exception("Git fetch error");
+                result.Success = false;
+            }
+
+            return result;
+        }
+
+        private SyncGitRepositoryResult SyncGitRepositoryMerge(List<GitCommit> newCommits, string tag, string repositoryFolder, string gitExecutable)
+        {
+            var result = new SyncGitRepositoryResult { Success = true };
+            var tags = tag.Split(',').ToList().Select(x => x.Trim()).ToList();
+            var taggedCommit = newCommits.OrderByDescending(o => o.DateTime).FirstOrDefault(x => tags.Any(t => x.Message.Contains(t)));
+
+            try
+            {
+                var mergeResult = taggedCommit != null ? this.ShellCommand.ExecuteShellCommand(repositoryFolder, gitExecutable, string.Concat("merge ", taggedCommit.Hash)) :
+                                                         this.ShellCommand.ExecuteShellCommand(repositoryFolder, gitExecutable, string.Concat("merge"));
+
+                if (mergeResult.Output.ToLower().Contains("updating") && mergeResult.Output.ToLower().Contains("fast-forward"))
+                {
+                    result.Success = true;
+                }
+                else
+                {
+                    // Investigate possible output scenarios
+                    result.Success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Exception = ex;
+                result.Success = false;
+            }
+
+            return result;
+        }
+
+        private async Task<UpdateGitRepositoryResult> UpdateGitRepository(BuildConfigurationModel buildConfiguration, RepositoryConfigurationModel repositoryConfiguration)
+        {
+            return await Task<UpdateGitRepositoryResult>.Run(() =>
+            {
+                var result = new UpdateGitRepositoryResult { Success = false };
+
+                var initializeWorkspace = this.InitializeWorkspace(buildConfiguration);
+                if (initializeWorkspace.Success == false)
+                {
+                    result.Exception = new Exception("Workspace initialization failed.");
+                    result.Success = false; 
+                }
+
+                var initializeGitRepository = this.InitializeGitRepository(buildConfiguration, repositoryConfiguration);
+                if (initializeGitRepository.Success == false)
+                {
+                    result.Exception = new Exception("Repository initialization failed.");
+                    result.Success = false;
+                }
+
+                var syncGitRepository = this.SyncGitRepository(buildConfiguration, repositoryConfiguration);
+                if (syncGitRepository.Success == false)
+                {
+                    result.Exception = new Exception("Repository sync failed.");
+                    result.Success = false;
+                }
+
+                result.Success = true;
+
+                return result;
+            });
+        }
     }
 }

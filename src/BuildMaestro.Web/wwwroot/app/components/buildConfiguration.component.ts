@@ -10,17 +10,26 @@ import { trigger } from '@angular/core';
     animations: [
         trigger("wapper", [
             transition("* => *", [
-                animate(300, keyframes([
-                    style({ opacity: 1, transform: 'translateX(15px)', offset: 0.3 }),
-                    style({ opacity: 1, transform: 'translateX(0)', offset: 1.0 })
+                animate(2000, keyframes([
+                    style({ background: 'inherit' }),
+                    style({ background: '#ff0000' }),
+                    style({ background: '#FF7070' })
                 ]))
             ])
         ])
+        //trigger("wapper", [
+        //    transition("* => *", [
+        //        animate(300, keyframes([
+        //            style({ opacity: 1, transform: 'translateX(15px)', offset: 0.3 }),
+        //            style({ opacity: 1, transform: 'translateX(0)', offset: 1.0 })
+        //        ]))
+        //    ])
+        //])
     ],
     moduleId: module.id,
     providers: [],
     selector: 'build-configuration',
-    styleUrls: [ 'buildConfiguration.component.css' ],
+    styleUrls: ['buildConfiguration.component.css'],
     templateUrl: 'buildConfiguration.component.html'
 })
 export class BuildConfigurationComponent implements DoCheck {
@@ -36,7 +45,6 @@ export class BuildConfigurationComponent implements DoCheck {
         var changes = this.differ.diff(this.configuration);
 
         if (changes) {
-            console.log('changes detected');
             this.wapper = !this.wapper;
         }
     }

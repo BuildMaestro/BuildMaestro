@@ -1,9 +1,22 @@
-﻿.content {
+﻿.build-configuration-summary {
     background-color: #e3e3e3;
     color: #666;
     padding: 1em;
     margin-left: 10px;
     margin-right: 10px;
+}
+
+.build-configuration-content {
+    background-color: #f3f3f3;
+    display: none;
+    color: #666;
+    margin-left: 20px;
+    margin-right: 20px;
+    min-height:300px;
+}
+
+.build-configuration-content.opened {
+    display: block;
 }
 
 .name {

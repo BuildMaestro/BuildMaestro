@@ -10,7 +10,8 @@ namespace BuildMaestro.Data.Models
     {
         public BuildConfiguration()
         {
-            GitCommits = new List<GitCommit>();
+            MsBuildConfigurations = new List<MsBuildConfiguration>();
+            RepositoryConfigurations = new List<RepositoryConfiguration>();
         }
 
         [Key]
@@ -18,23 +19,12 @@ namespace BuildMaestro.Data.Models
 
         public bool Active { get; set; }
 
-        public bool AutoDeploy { get; set; }
-
-        public string AutoDeployTags { get; set; }
-
-        public bool CleanWorkspace { get; set; }
-
         public bool Enabled { get; set; }
 
-        public string GitRepository { get; set; }
+        public virtual ICollection<MsBuildConfiguration> MsBuildConfigurations { get; set; }
 
-        public string GitBranch { get; set; }
-        
         public string Name { get; set; }
 
-        public string RelativeSolutionFileLocation { get; set; }
-
-        public virtual ICollection<GitCommit> GitCommits { get; set; }
-
+        public virtual ICollection<RepositoryConfiguration> RepositoryConfigurations { get; set; }
     }
 }

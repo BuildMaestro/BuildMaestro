@@ -1,4 +1,5 @@
 ﻿using BuildMaestro.BuildAgent.Events;
+using BuildMaestro.BuildAgent.Models;
 using BuildMaestro.BuildAgent.Services;
 using BuildMaestro.Service;
 using BuildMaestro.Shared.Models;
@@ -70,46 +71,74 @@ namespace BuildMaestro.BuildAgent
 
         }
 
-        private void WorkerRunBuildConfigurations()
+        private async void WorkerRunBuildConfigurations()
         {
             var buildConfigurationService = new BuildConfigurationService();
             var buildConfigurations = buildConfigurationService.GetBuildConfigurations();
+            var gitService = new GitService(this);
+            var buildService = new BuildService(this);
 
-            using (var gitService = new GitService(this))
+            foreach (var buildConfiguration in buildConfigurations)
             {
-                foreach (var buildConfiguration in buildConfigurations)
+                var gitTask = await gitService.Run(buildConfiguration);
+
+                if (gitTask.Success)
                 {
-                    // Run build confiration
-                    var initializeWorkspaceResult = gitService.InitializeWorkspace(buildConfiguration);
-                    if (!initializeWorkspaceResult.Success)
-                    {
-                        continue;
-                    }
-
-                    var initializeGitRepositoryResult = gitService.InitializeGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
-                    if (!initializeGitRepositoryResult.Success)
-                    {
-                        continue;
-                    }
-
-                    var updateGitRepositoryResult = gitService.UpdateGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
-                    if (updateGitRepositoryResult.Success != Models.UpdateGitRepositoryResultSuccesType.SuccessMerged )
-                    {
-                        continue;
-                    }
-
-                    var updateLatestCommitResultGitEventCode = gitService.UpdateLatestCommit(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
-
+                    var buildTask = await buildService.Run(buildConfiguration);
                 }
+
+                var s = 2;
             }
         }
 
-        public void OnStatusChangeEvent(int buildConfigurationId, GitServiceEventCode code)
+
+        //private void WorkerRunBuildConfigurations()
+        //{
+        //    var buildConfigurationService = new BuildConfigurationService();
+        //    var buildConfigurations = buildConfigurationService.GetBuildConfigurations();
+        //    var gitService = new GitService(this);
+        //    var buildService = new BuildService(this);
+
+        //    foreach (var buildConfiguration in buildConfigurations)
+        //    {
+        //        // Run build confiration
+        //        var initializeWorkspaceResult = gitService.InitializeWorkspace(buildConfiguration);
+        //        if (!initializeWorkspaceResult.Success)
+        //        {
+        //            continue;
+        //        }
+
+        //        var initializeGitRepositoryResult = gitService.InitializeGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+        //        if (!initializeGitRepositoryResult.Success)
+        //        {
+        //            continue;
+        //        }
+
+        //        var updateGitRepositoryResult = gitService.UpdateGitRepository(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+        //        if (updateGitRepositoryResult.Success != Models.UpdateGitRepositoryResultSuccesType.SuccessMerged)
+        //        {
+        //            continue;
+        //        }
+
+        //        var updateLatestCommitResultGitEventCode = gitService.UpdateLatestCommit(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+
+        //        if (updateLatestCommitResultGitEventCode != EventCode.GitUpdatingLastCommitChanged)
+        //        {
+        //            continue;
+        //        }
+        //        var restoreResult = buildService.NugetRestore(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+
+        //        var buildResult = buildService.Build(initializeWorkspaceResult.WorkspaceDirectory, buildConfiguration);
+
+        //    }
+        //}
+
+        public void OnStatusChangeEvent(int buildConfigurationId, EventCode code)
         {
             this.OnStatusChangeEvent(buildConfigurationId, code, null);
         }
 
-        public void OnStatusChangeEvent(int buildConfigurationId, GitServiceEventCode code, dynamic data)
+        public void OnStatusChangeEvent(int buildConfigurationId, EventCode code, dynamic data)
         {
             if (this.StatusChangeEvent != null)
             {

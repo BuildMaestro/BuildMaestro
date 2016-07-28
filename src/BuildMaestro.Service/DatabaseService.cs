@@ -2,6 +2,7 @@
 using Microsoft.Data.Entity;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,45 +39,105 @@ namespace BuildMaestro.Service
                         Key = ApplicationSettingKey.DateTimeFormat,
                         Value = @"dd-MM-yyyy HH:mm:ss"
                     });
+                    context.AplicationSettings.Add(new ApplicationSetting
+                    {
+                        Key = ApplicationSettingKey.MsBuildExecutable,
+                        Value = @"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\msbuild.exe"
+                    });
+                    context.AplicationSettings.Add(new ApplicationSetting
+                    {
+                        Key = ApplicationSettingKey.NugetExecutable,
+                        Value = @"C:\BuildMaestro\\nuget.exe"
+                    });
                 }
 
                 // Add default build configurations
                 if (!context.BuildConfigurations.Any())
                 {
-                    context.BuildConfigurations.Add(new BuildConfiguration
+                    var buildConfigTest1 = new BuildConfiguration
                     {
                         Active = true,
+                        Enabled = true,
                         Name = "Example mvc application (TEST1)",
-                        AutoDeploy = true,
-                        AutoDeployTags = "",
-                        GitBranch = "master",
-                        GitRepository = "https://github.com/BuildMaestro/ExampleMvcApplication.git",
-                        RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln"
-                    });
+                        RepositoryConfigurations = new List<RepositoryConfiguration>
+                        {
+                            new RepositoryConfiguration
+                            {
+                                Active = true,
+                                AutoUpdate = true,
+                                AutoUpdateTag = "#deploy",
+                                Branch = "master",
+                                RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln",
+                                RepositoryUrl = "https://github.com/BuildMaestro/ExampleMvcApplication.git"
+                            }
+                        }
+                    };
+                    var buildConfigTest1MsBuildConfigurations = new List<MsBuildConfiguration>
+                    {
+                        new MsBuildConfiguration { BuildConfiguration = buildConfigTest1, RepositoryConfiguration = buildConfigTest1.RepositoryConfigurations.Single() }
+                    };
 
-                    context.BuildConfigurations.Add(new BuildConfiguration
+                    buildConfigTest1.MsBuildConfigurations = buildConfigTest1MsBuildConfigurations;
+                    context.BuildConfigurations.Add(buildConfigTest1);
+
+                    var buildConfigTest2 = new BuildConfiguration
                     {
                         Active = true,
+                        Enabled = true,
                         Name = "Example mvc application (TEST2)",
-                        AutoDeploy = true,
-                        AutoDeployTags = "",
-                        GitBranch = "master",
-                        GitRepository = "https://github.com/BuildMaestro/ExampleMvcApplication.git",
-                        RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln"
+                        RepositoryConfigurations = new List<RepositoryConfiguration>
+                        {
+                            new RepositoryConfiguration
+                            {
+                                Active = true,
+                                AutoUpdate = true,
+                                AutoUpdateTag = "#deploy",
+                                Branch = "master",
+                                RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln",
+                                RepositoryUrl = "https://github.com/BuildMaestro/ExampleMvcApplication.git"
+                            }
+                        }
+                    };
+                    var buildConfigTest2MsBuildConfigurations = new List<MsBuildConfiguration>
+                    {
+                        new MsBuildConfiguration { BuildConfiguration = buildConfigTest2, RepositoryConfiguration = buildConfigTest2.RepositoryConfigurations.Single() }
+                    };
+                    buildConfigTest2.MsBuildConfigurations = buildConfigTest2MsBuildConfigurations;
+                    context.BuildConfigurations.Add(buildConfigTest2);
 
-                    });
-
-                    context.BuildConfigurations.Add(new BuildConfiguration
+                    var buildConfigAcc = new BuildConfiguration
                     {
                         Active = true,
+                        Enabled = true,
                         Name = "Example mvc application (ACC)",
-                        AutoDeploy = true,
-                        AutoDeployTags = "",
-                        GitBranch = "master",
-                        GitRepository = "https://github.com/BuildMaestro/ExampleMvcApplication.git",
-                        RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln"
-
-                    });
+                        RepositoryConfigurations = new List<RepositoryConfiguration>
+                        {
+                            new RepositoryConfiguration
+                            {
+                                Active = true,
+                                AutoUpdate = false,
+                                AutoUpdateTag = "",
+                                Branch = "master",
+                                RelativeSolutionFileLocation = @"ExampleMvcApplication\ExampleMvcApplication.sln",
+                                RepositoryUrl = "https://github.com/BuildMaestro/ExampleMvcApplication.git"
+                            },
+                            new RepositoryConfiguration
+                            {
+                                Active = true,
+                                AutoUpdate = false,
+                                AutoUpdateTag = "",
+                                Branch = "master",
+                                RelativeSolutionFileLocation = @"",
+                                RepositoryUrl = "https://github.com/BuildMaestro/BuildMaestro.git"
+                            }
+                        }
+                    };
+                    var buildConfigAccMsBuildConfigurations = new List<MsBuildConfiguration>
+                    {
+                        new MsBuildConfiguration { BuildConfiguration = buildConfigAcc, RepositoryConfiguration = buildConfigAcc.RepositoryConfigurations.First() }
+                    };
+                    buildConfigAcc.MsBuildConfigurations = buildConfigAccMsBuildConfigurations;
+                    context.BuildConfigurations.Add(buildConfigAcc);
 
                     context.SaveChanges();
                 }

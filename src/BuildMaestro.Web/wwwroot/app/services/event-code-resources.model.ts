@@ -26,6 +26,12 @@
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommit, description: "Checking Git commit for change" });
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommitChanged, description: "Git commit changed" });
         this.eventCodeResources.push({ eventCode: EventCode.GitUpdatingLastCommitNoChange, description: "Latest git commit not changed" });
+        this.eventCodeResources.push({ eventCode: EventCode.BuildStarted, description: "Build started" });
+        this.eventCodeResources.push({ eventCode: EventCode.BuildSuccess, description: "Build finished successfully" });
+        this.eventCodeResources.push({ eventCode: EventCode.BuildFailure, description: "Build failed" });
+        this.eventCodeResources.push({ eventCode: EventCode.NugetRestoreStarted, description: "Nuget package restore started" });
+        this.eventCodeResources.push({ eventCode: EventCode.NugetRestoreSuccess, description: "Nuget package restore finished successfully" });
+        this.eventCodeResources.push({ eventCode: EventCode.NugetRestoreFailure, description: "Nuget package restore failed" });
     }
 
     public getDescription(eventCode: EventCode) {
@@ -59,7 +65,13 @@ export enum EventCode {
     GitMergingFailure,
     GitUpdatingLastCommit,
     GitUpdatingLastCommitNoChange,
-    GitUpdatingLastCommitChanged
+    GitUpdatingLastCommitChanged,
+    BuildStarted,
+    BuildSuccess,
+    BuildFailure,
+    NugetRestoreStarted,
+    NugetRestoreSuccess,
+    NugetRestoreFailure
 }
 
 export class EventCodeResourceModel implements IEventCodeResourceModel {

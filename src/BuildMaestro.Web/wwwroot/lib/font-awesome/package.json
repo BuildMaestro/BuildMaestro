@@ -1,11 +1,11 @@
 {
   "_args": [
     [
-      "font-awesome@^4.6.3",
-      "D:\\Development\\Git\\BuildMaestro\\src\\BuildMaestro.Web"
+      "font-awesome@4.6.3",
+      "D:\\Development\\Git\\BM\\BuildMaestro\\src\\BuildMaestro.Web"
     ]
   ],
-  "_from": "font-awesome@>=4.6.3-0 <5.0.0-0",
+  "_from": "font-awesome@4.6.3",
   "_id": "font-awesome@4.6.3",
   "_inCache": true,
   "_location": "/font-awesome",
@@ -22,11 +22,11 @@
   "_phantomChildren": {},
   "_requested": {
     "name": "font-awesome",
-    "raw": "font-awesome@^4.6.3",
-    "rawSpec": "^4.6.3",
+    "raw": "font-awesome@4.6.3",
+    "rawSpec": "4.6.3",
     "scope": null,
-    "spec": ">=4.6.3-0 <5.0.0-0",
-    "type": "range"
+    "spec": "4.6.3",
+    "type": "version"
   },
   "_requiredBy": [
     "/"
@@ -34,8 +34,8 @@
   "_resolved": "https://registry.npmjs.org/font-awesome/-/font-awesome-4.6.3.tgz",
   "_shasum": "86933651540ee00874c664017f50f2172f6531a2",
   "_shrinkwrap": null,
-  "_spec": "font-awesome@^4.6.3",
-  "_where": "D:\\Development\\Git\\BuildMaestro\\src\\BuildMaestro.Web",
+  "_spec": "font-awesome@4.6.3",
+  "_where": "D:\\Development\\Git\\BM\\BuildMaestro\\src\\BuildMaestro.Web",
   "author": {
     "email": "dave@fontawesome.io",
     "name": "Dave Gandy",

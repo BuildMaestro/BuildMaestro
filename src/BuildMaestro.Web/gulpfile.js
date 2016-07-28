@@ -6,11 +6,8 @@ Click here to learn more. http://go.microsoft.com/fwlink/?LinkId=518007
 'use strict'
 
 // 
-var ext_replace = require('gulp-ext-replace');
 var gulp = require('gulp');
-var rollup = require('rollup');
-var typescript = require('rollup-plugin-typescript');
-var uglify = require('gulp-uglifyjs');
+
 
 gulp.task('default', function () {
     // place code for your default task here
@@ -19,43 +16,45 @@ gulp.task('default', function () {
 gulp.task('build', function () {
     process.stdout.write('Starting rollup.\n');
 
-    //// Custom Rollup Plugin to resolve rxjs deps
-    //// Thanks to https://github.com/IgorMinar/new-world-test/blob/master/es6-or-ts-bundle/rollup.config.js
-    //class RollupNG2 {
-    //    constructor(options) {
-    //        this.options = options;
-    //    }
-    //    resolveId(id, from) {
-    //        if (id.startsWith('rxjs/')) {
-    //            return `${__dirname}/node_modules/rxjs-es/${id.replace('rxjs/', '')}.js`;
-    //        }
-    //    }
-    //}
-    //const rollupNG2 = (config) => new RollupNG2(config);
+    // Copy/Populate libs folder from dependencies
 
-    //rollup.rollup({
-    //    entry: 'wwwroot/app/main.ts',
-    //    format: 'cjs',
-    //    plugins: [
-    //      typescript(),
-    //      rollupNG2()
-    //    ]
-    //}).then(function (bundle) {
-    //    bundle.write({
-    //        format: 'cjs',
-    //        dest: './wwwroot/app/buildmaestro.js'
-    //    });
-    //});
+    gulp.src('./node_modules/font-awesome/**/*.*')
+    .pipe(gulp.dest('./wwwroot/lib/font-awesome'));
 
-    //process.stdout.write('Finished rollup.\n');
+    gulp.src('./node_modules/es6-shim/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/es6-shim'));
 
-    //process.stdout.write('Starting uglify.\n');
+    gulp.src('./node_modules/zone.js/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/zone.js'));
 
-    //gulp.src('./wwwroot/app/buildmaestro.js')
-    //    .pipe(uglify())
-    //    .pipe(ext_replace('.min.js'))
-    //    .pipe(gulp.dest('./wwwroot/app'));
+    gulp.src('./node_modules/reflect-metadata/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/reflect-metadata'));
 
-    //process.stdout.write('Finished uglify.\n');
+    gulp.src('./node_modules/systemjs/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/systemjs'));
+
+    gulp.src('./node_modules/rxjs/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/rxjs'));
+
+    gulp.src('./node_modules/jquery/dist/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/jquery'));
+
+    gulp.src('./vendor/jquery.signalR/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/jquery.signalR'));
+
+    gulp.src('./node_modules/@angular/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/@angular'));
+
+    gulp.src('./node_modules/angular2-in-memory-web-api/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/angular2-in-memory-web-api'));
+
+    gulp.src('./node_modules/css-animator/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/css-animator'));
+
+    gulp.src('./node_modules/primeng/**/*.js')
+        .pipe(gulp.dest('./wwwroot/lib/primeng'));
+
+    gulp.src('./node_modules/primeui/**/*.*')
+       .pipe(gulp.dest('./wwwroot/lib/primeui'));
 })
 

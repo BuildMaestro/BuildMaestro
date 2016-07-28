@@ -1,23 +1,28 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>BuildMaestro - .NET / Git Building system</title>
+    <title>BuildMaestro - Git / .NET building system</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>document.write('<base href="' + document.location + '" />');</script>
+
+    <link rel="stylesheet" type="text/css" href="lib/primeui/themes/omega/theme.css" />
+    <link rel="stylesheet" type="text/css" href="app/resources/icons/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="lib/primeui/primeui-ng-all.min.css" />
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="~/icon.png" sizes="32x32" />
-    <!-- 1. Load libraries -->
-    <!-- Polyfill(s) for older browsers -->
-    <script src="~/lib/core-js/client/shim.min.js"></script>
+
+    <script src="~/lib/es6-shim/es6-shim.min.js"></script>
     <script src="~/lib/zone.js/dist/zone.js"></script>
     <script src="~/lib/reflect-metadata/Reflect.js"></script>
     <script src="~/lib/systemjs/dist/system.src.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/jquery.signalR/jquery.signalR.js"></script>
-
-    <!-- 2. Configure SystemJS -->
-    <script src="systemjs.config.js"></script>
-    @*<script src="~/app/buildmaestro.min.js"></script>*@
+    <script src="~/systemjs.config.js"></script>
+    <script>
+      System.import('app').catch(function(err){ console.error(err);  });
+    </script>
 </head>
 <!-- 3. Display the application -->
 <body>

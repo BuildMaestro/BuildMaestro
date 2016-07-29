@@ -9,7 +9,7 @@ Click here to learn more. http://go.microsoft.com/fwlink/?LinkId=518007
 // 
 var gulp = require('gulp');
 
-gulp.task('default', ['copy-libs']);
+gulp.task('default', function () { });
 
 gulp.task('copy-libs', function () {
     // Copy/Populate libs folder from dependencies

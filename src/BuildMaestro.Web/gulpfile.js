@@ -4,7 +4,7 @@ This file in the main entry point for defining Gulp tasks and using Gulp plugins
 Click here to learn more. http://go.microsoft.com/fwlink/?LinkId=518007
 */
 
-'use strict'
+'use strict';
 
 // 
 var gulp = require('gulp');
@@ -42,9 +42,6 @@ gulp.task('copy-libs', function () {
     gulp.src('./node_modules/@angular/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/@angular'));
 
-    gulp.src('./node_modules/angular2-in-memory-web-api/**/*.js')
-        .pipe(gulp.dest('./wwwroot/lib/angular2-in-memory-web-api'));
-
     gulp.src('./node_modules/css-animator/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/css-animator'));
 
@@ -53,5 +50,5 @@ gulp.task('copy-libs', function () {
 
     gulp.src('./node_modules/primeui/**/*.*')
        .pipe(gulp.dest('./wwwroot/lib/primeui'));
-})
+});
 

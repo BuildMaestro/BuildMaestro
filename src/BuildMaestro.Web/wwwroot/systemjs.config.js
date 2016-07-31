@@ -4,7 +4,6 @@
     var map = {
         'app': 'app', // 'dist',
         'rxjs': 'lib/rxjs',
-        'angular2-in-memory-web-api': 'lib/angular2-in-memory-web-api',
         '@angular': 'lib/@angular',
         'primeng': 'lib/primeng'
     };
@@ -13,7 +12,6 @@
     var packages = {
         'app': { main: 'main.js', defaultExtension: 'js' },
         'rxjs': { defaultExtension: 'js' },
-        'angular2-in-memory-web-api': { defaultExtension: 'js' },
         'primeng': { defaultExtension: 'js' }
     };
 

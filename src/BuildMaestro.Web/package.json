@@ -40,7 +40,8 @@
     "tsc:w": "tsc -w",
     "lite": "lite-server",
     "start": "tsc && concurrently \"npm run tsc:w\" \"npm run lite\" ",
-    "typings": "typings"
+    "typings": "typings",
+    "tt": "typings install dt~node --global --save"
   },
   "author": "",
   "license": "ISC"

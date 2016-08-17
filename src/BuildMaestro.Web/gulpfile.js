@@ -15,7 +15,7 @@ gulp.task('copy-libs', function () {
     // Copy/Populate libs folder from dependencies
     process.stdout.write('Copy/Populate libs folder from dependencies...\n');
 
-    gulp.src('./node_modules/font-awesome/**/*.*')
+    gulp.src('./node_modules/font-awesome/**/*')
     .pipe(gulp.dest('./wwwroot/lib/font-awesome'));
 
     gulp.src('./node_modules/es6-shim/**/*.js')
@@ -41,6 +41,12 @@ gulp.task('copy-libs', function () {
 
     gulp.src('./node_modules/@angular/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/@angular'));
+
+    gulp.src('./bower_components/**/*')
+        .pipe(gulp.dest('./wwwroot/lib/bower_components'));
+
+    gulp.src('./node_modules/@vaadin/**/*')
+    .pipe(gulp.dest('./wwwroot/lib/@vaadin'));
 
     gulp.src('./node_modules/css-animator/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/css-animator'));

@@ -5,7 +5,8 @@
         'app': 'app', // 'dist',
         'rxjs': 'lib/rxjs',
         '@angular': 'lib/@angular',
-        'primeng': 'lib/primeng'
+        'primeng': 'lib/primeng',
+        '@vaadin': 'lib/@vaadin'
     };
 
     // packages tells the System loader how to load when no filename and/or no extension
@@ -25,7 +26,8 @@
       '@angular/router',
       '@angular/testing',
       '@angular/upgrade',
-      '@angular/forms'
+      '@angular/forms',
+      '@vaadin/angular2-polymer'
     ];
 
     // add package entries for angular packages in the form '@angular/common': { main: 'index.js', defaultExtension: 'js' }

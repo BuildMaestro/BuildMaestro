@@ -239,5 +239,6 @@ _Pvt_Extensions
 src/BuildMaestro.Web/wwwroot/app/**/*.js
 src/BuildMaestro.Web/wwwroot/app/**/*.js.map
 src/BuildMaestro.Web/wwwroot/lib/**/*.*
-src/BuildMaestro.Web/wwwroot/libraries/**/*.css
+src/BuildMaestro.Web/bower_components/**/*.*
 src/BuildMaestro.Web/node_modules/**/*.*
+/src/BuildMaestro.Web/wwwroot/lib/@vaadin/angular2-polymer/LICENSE

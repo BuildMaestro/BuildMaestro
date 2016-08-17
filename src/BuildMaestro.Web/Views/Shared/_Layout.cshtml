@@ -10,7 +10,6 @@
     <link rel="stylesheet" type="text/css" href="~/lib/font-awesome/css/font-awesome.css" />
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="~/icon.png" sizes="32x32" />
-
     <script src="~/lib/es6-shim/es6-shim.min.js"></script>
     <script src="~/lib/zone.js/dist/zone.js"></script>
     <script src="~/lib/reflect-metadata/Reflect.js"></script>
@@ -29,7 +28,9 @@
     @RenderSection("scripts", required: false)
 
     <script>
-        System.import('app').catch(function (err) { console.error(err); });
+        document.addEventListener('WebComponentsReady', function() {
+          System.import('app').catch(function(err){ console.error(err); });
+        });
     </script>
 </body>
 

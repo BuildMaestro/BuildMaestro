@@ -1,5 +1,6 @@
 ﻿import { BuildConfigurationModel } from '../models/build-configuration.model';
 import { Component, Input, DoCheck, KeyValueDiffers } from '@angular/core';
+import { PolymerElement } from '@vaadin/angular2-polymer';
 
 import { animate, keyframes } from '@angular/core';
 import { style, state } from '@angular/core';
@@ -27,6 +28,7 @@ import { trigger } from '@angular/core';
         //])
     ],
     moduleId: module.id,
+    directives: [PolymerElement('paper-input')],
     providers: [],
     selector: 'build-configuration',
     styleUrls: ['buildConfiguration.component.css'],

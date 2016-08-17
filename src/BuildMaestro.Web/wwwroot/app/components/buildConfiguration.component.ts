@@ -37,10 +37,15 @@ import { trigger } from '@angular/core';
 export class BuildConfigurationComponent implements DoCheck {
     @Input() configuration: BuildConfigurationModel;
     differ: any;
+    test: string;
     wapper: boolean = false;
 
     constructor(private differs: KeyValueDiffers) {
         this.differ = differs.find({}).create(null);
+    }
+
+    showAlert() {
+        alert(this.test);
     }
 
     ngDoCheck() {

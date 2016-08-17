@@ -44,11 +44,5 @@ gulp.task('copy-libs', function () {
 
     gulp.src('./node_modules/css-animator/**/*.js')
         .pipe(gulp.dest('./wwwroot/lib/css-animator'));
-
-    gulp.src('./node_modules/primeng/**/*.js')
-        .pipe(gulp.dest('./wwwroot/lib/primeng'));
-
-    gulp.src('./node_modules/primeui/**/*.*')
-       .pipe(gulp.dest('./wwwroot/lib/primeui'));
 });
 
